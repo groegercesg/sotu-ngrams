@@ -5,6 +5,50 @@ mod tests {
     use grams::read_lines;
 
     #[test]
+    fn basic_line_of_text_number_tokens() {
+        let mut bmodel = BigramModel::new();
+
+        let line_of_text = "This year again we are finally together again".to_string();
+        update_bigram_model(line_of_text, &mut bmodel);
+
+        // Number of Tokens
+        let got = bmodel.token_counts.keys().len();
+        let want = 7;
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn basic_line_of_text_contents_tokens() {
+        let mut bmodel = BigramModel::new();
+
+        let line_of_text = "This year again we are finally together again".to_string();
+        update_bigram_model(line_of_text, &mut bmodel);
+
+        // Contents of Tokens
+        let mut got = bmodel.token_counts.into_keys().collect::<Vec<String>>();
+        got.sort();
+        let mut want = vec!["This".to_string(), "again".into(), "are".into(), "finally".into(), "together".into(), "we".into(), "year".into()];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn basic_line_of_text_values_tokens() {
+        let mut bmodel = BigramModel::new();
+
+        let line_of_text = "This year again we are finally together again".to_string();
+        update_bigram_model(line_of_text, &mut bmodel);
+
+        // Values of Tokens
+        let mut got = bmodel.token_counts.into_values().collect::<Vec<i64>>();
+        got.sort();
+        let mut want = vec![2, 1, 1, 1, 1, 1, 1];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+
+    #[test]
     fn biden_2022_full_test() {
         let mut bmodel = BigramModel::new();
 

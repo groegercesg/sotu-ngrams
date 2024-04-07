@@ -4,8 +4,8 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 pub struct BigramModel {
-    token_counts: HashMap<String, i64>,
-    bigram_counts: HashMap<(String, String), i64>
+    pub token_counts: HashMap<String, i64>,
+    pub bigram_counts: HashMap<(String, String), i64>
 }
 
 impl BigramModel {
