@@ -142,7 +142,6 @@ mod tests {
         assert_eq!(got, want);
     }
 
-
     #[test]
     fn biden_2022_full_test() {
         let mut bmodel = BigramModel::new();
