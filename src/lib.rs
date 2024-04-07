@@ -61,7 +61,12 @@ pub fn calculate_bigram_probability(bigram: &(String, String), _bmodel: &mut Big
     let bigram_count = _bmodel.get_bigram_count(bigram.clone());
     let token_count = _bmodel.get_token_count(bigram.0.to_string());
 
-    return bigram_count as f64 / token_count as f64;
+    if token_count.eq(&0) {
+        // Catch a divide by zero to stop it returning NaN
+        return 0 as f64;
+    } else {
+        return bigram_count as f64 / token_count as f64;
+    }    
 }
 
 pub fn update_bigram_model(line_of_text: String, _bmodel: &mut BigramModel) {
