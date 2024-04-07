@@ -2,7 +2,7 @@ use std::env;
 
 use grams::BigramModel;
 use grams::update_bigram_model;
-use grams::calculate_bigram_probability;
+// use grams::calculate_bigram_probability;
 use grams::read_lines;
 
 fn main() {
@@ -26,12 +26,16 @@ fn main() {
         }
     }
 
-    let test_tuple = ("keep".to_string(), "moving".to_string());
-    let prob_value = calculate_bigram_probability(&test_tuple, &mut bmodel);
+    // TODO: Filter out '<S>' and '</S>'
 
-    println!("{:?}: {:.3}", 
-        test_tuple,
-        prob_value
+    let most_common_bigram = bmodel.bigram_counts
+            .iter()
+            .max_by(|a, b| a.1.cmp(&b.1))
+            .ok_or("Couldn't find a bigram");
+
+    println!("Most Frequent Bigram: {:?}. It occurred {:?} times.", 
+        most_common_bigram.unwrap().0,
+        most_common_bigram.unwrap().1
     );
 }
 
