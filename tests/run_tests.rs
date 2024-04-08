@@ -141,6 +141,22 @@ mod tests {
     }
 
     #[test]
+    fn basic_line_of_text_most_common() {
+        let mut bmodel = BigramModel::new();
+
+        let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
+        bmodel.update_bigram_model(line_of_text);
+
+        let got = bmodel.most_common_bigram();
+        assert!(got.is_ok());
+
+        let want_bigram = ("test".to_string(), "mango".to_string());
+        assert_eq!(*got.unwrap().0, want_bigram);
+        let want_count = 2;
+        assert_eq!(*got.unwrap().1, want_count);
+    }
+
+    #[test]
     fn biden_2022_full_test() {
         let mut bmodel = BigramModel::new();
 

@@ -91,6 +91,15 @@ impl BigramModel {
         // Add a end-of-sentence token, so the probabilities are cool
         self.update_bigram_counts((prev.to_string(), "</S>".to_string()))
     }
+
+    pub fn most_common_bigram(
+        &mut self
+    ) -> Result<(&(String, String), &i64), &str> {
+        return self.bigram_counts
+            .iter()
+            .max_by(|a, b| a.1.cmp(&b.1))
+            .ok_or("Couldn't find a bigram");
+    }
 }
 
 pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
