@@ -4,8 +4,9 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 pub struct BigramModel {
-    pub token_counts: HashMap<String, i64>,
-    pub bigram_counts: HashMap<Vec<String>, i64>,
+    pub last_given_penultimate_counts: HashMap<Vec<String>, HashMap<String, i64>>,
+    pub penultimate_gram_counts: HashMap<Vec<String>, i64>,
+    pub ngram_counts: HashMap<Vec<String>, i64>,
     degree: i64,
     start_of_sentence: String,
     end_of_sentence: String,
@@ -17,8 +18,9 @@ impl BigramModel {
         degree: i64
     ) -> BigramModel {
         BigramModel {
-            token_counts: HashMap::new(),
-            bigram_counts: HashMap::new(),
+            last_given_penultimate_counts: HashMap::new(),
+            penultimate_gram_counts: HashMap::new(),
+            ngram_counts: HashMap::new(),
             degree: degree,
             start_of_sentence: "<S>".to_string(),
             end_of_sentence: "</S>".to_string(),
@@ -26,114 +28,139 @@ impl BigramModel {
         }
     }
 
-    fn get_token_count(
+    fn get_last_given_penultimate_count(
         &mut self,
-        gram: String
+        pen_gram: Vec<String>,
+        last: String
     ) -> i64 {
-        match self.token_counts.get(&gram) {
+        match self.last_given_penultimate_counts.get(&pen_gram) {
+            Some(pen_gram_map) => { 
+                match pen_gram_map.get(&last) {
+                    Some(count) => { return *count; }
+                    None => { return 0;}
+                }
+            }
+            None => { return 0; }
+        }
+    }
+
+    fn get_penultimate_count(
+        &mut self,
+        pen_gram: Vec<String>
+    ) -> i64 {
+        match self.penultimate_gram_counts.get(&pen_gram) {
             Some(count) => { return *count; }
             None => { return 0; }
         }
     }
 
-    fn get_bigram_count(
+    fn update_last_given_penultimate_counts(
         &mut self,
-        bigram: Vec<String>
-    ) -> i64 {
-        match self.bigram_counts.get(&bigram) {
-            Some(count) => { return *count; }
-            None => { return 0; }
-        }
-    }
-
-    fn update_token_counts(
-        &mut self,
-        gram: String
+        pen_gram: &Vec<String>,
+        last: &String
     ) {
-        match self.token_counts.get(&gram) {
-            Some(count) => { self.token_counts.insert(gram, count + 1); }
-            None => { self.token_counts.insert(gram, 1); }
+        match self.last_given_penultimate_counts.get_mut(pen_gram) {
+            Some(pen_gram_map) => {
+                match pen_gram_map.get(last) {
+                    Some(count) => { 
+                        pen_gram_map.insert(last.to_string(), *count + 1);
+                    }
+                    None => { pen_gram_map.insert(last.to_string(), 1); }
+                }
+            }
+            None => { 
+                let mut pen_gram_map = HashMap::new();
+                pen_gram_map.insert(last.to_string(), 1);
+                self.last_given_penultimate_counts.insert(pen_gram.to_vec(), pen_gram_map);
+            }
         }
     }
 
-    fn update_bigram_counts(
+    fn update_penultimate_counts(
         &mut self,
-        bigram: Vec<String>
+        pen_gram: &Vec<String>
     ) {
-        match self.bigram_counts.get(&bigram) {
-            Some(count) => { self.bigram_counts.insert(bigram, count + 1); }
-            None => { self.bigram_counts.insert(bigram, 1); }
+        match self.penultimate_gram_counts.get(pen_gram) {
+            Some(count) => { self.penultimate_gram_counts.insert(pen_gram.to_vec(), count + 1); }
+            None => { self.penultimate_gram_counts.insert(pen_gram.to_vec(), 1); }
         }
     }
 
-    pub fn calculate_bigram_probability(
+    fn update_ngram_counts(
         &mut self,
-        bigram: &Vec<String>
+        ngram: &Vec<String>
+    ) {
+        match self.ngram_counts.get(ngram) {
+            Some(count) => { self.ngram_counts.insert(ngram.to_vec(), count + 1); }
+            None => { self.ngram_counts.insert(ngram.to_vec(), 1); }
+        }
+    }
+
+    pub fn calculate_ngram_probability(
+        &mut self,
+        ngram: &Vec<String>
     ) -> f64 {
         // To Calculate:
         // For n_gram [A,B,C]
         // Given n_gram[0:len-1], what is the probability of n_gram[len]
         // For n_gram[0:len-1] grams, we need to count how many times these occur (the denominator)
         // Then we need to store, for each n_gram[0:len-1], how many times each n_gram[len] occurs (numberator)
-
-        
-
-        let bigram_count = self.get_bigram_count(bigram.clone());
-        let token_count;
-        match bigram.get(0) {
-            Some(gram) => { token_count = self.get_token_count(gram.to_string()); }
-            None => { panic!("Bigram wasn't large enough: {:#?}", bigram); }
-        }
-    
-        if token_count.eq(&0) {
-            // Catch a divide by zero to stop it returning NaN
-            return 0 as f64;
+        if let Some((last, penultimate_gram)) = ngram.split_last() {
+            let last_given_penultimate_count = self.get_last_given_penultimate_count(penultimate_gram.to_vec(), last.to_string());
+            let penultimate_gram_count = self.get_penultimate_count(penultimate_gram.to_vec());
+            
+            if penultimate_gram_count.eq(&0) {
+                // Catch a divide by zero to stop it returning NaN
+                return 0 as f64;
+            } else {
+                return last_given_penultimate_count as f64 / penultimate_gram_count as f64;
+            }   
         } else {
-            return bigram_count as f64 / token_count as f64;
-        }    
+            panic!("Split last_mut failed");
+        }
     }
 
-    pub fn update_bigram_model(
+    pub fn update_ngram_model(
         &mut self,
         line_of_text: String
     ) {
-        let words: Vec<String> = line_of_text.split_whitespace().map(str::to_string).collect();
+        let mut words: Vec<String> = line_of_text.split_whitespace().map(str::to_string).collect();
         
         // Add start and end tokens
         words.insert(0, self.start_of_sentence.to_string());
         words.push(self.end_of_sentence.to_string());
+
+        // TODO: What if degree > words?
         
         // Take a line of text, and update the model with it 
-        for gram in words.windows(self.degree.try_into().unwrap()) {
-            assert!(gram.len() == self.degree.try_into().unwrap());
+        for ngram in words.windows(self.degree.try_into().unwrap()) {
+            assert!(ngram.len() == self.degree.try_into().unwrap());
+
+            let last = ngram.split_last().unwrap().0;
+            let penultimate_gram = ngram.split_last().unwrap().1.to_vec();
             
-            // Update token counts
-            self.update_token_counts(gram.to_string());
-            
-            // Update bigram counts
-            let bigram = vec![prev.to_string(), gram.to_string()];
-            self.update_bigram_counts(bigram);
-    
-            prev = gram;
+            // Update last_given_penultimate counts
+            self.update_last_given_penultimate_counts(&penultimate_gram, last);
+            // Update penultimate counts
+            self.update_penultimate_counts(&penultimate_gram);
+            // Update ngram counts
+            self.update_ngram_counts(&ngram.to_vec());
         }
-    
-        // Add a end-of-sentence token, so the probabilities are cool
-        self.update_bigram_counts(vec![prev.to_string(), self.end_of_sentence.to_string()])
     }
 
-    pub fn most_common_bigram(
+    pub fn most_common_ngram(
         &mut self
     ) -> Result<(&Vec<String>, &i64), &str> {
-        return self.bigram_counts
+        return self.ngram_counts
             .iter()
             .max_by(|a, b| a.1.cmp(&b.1))
             .ok_or("Couldn't find a bigram");
     }
 
-    pub fn most_common_bigram_without_sentence_tokens(
+    pub fn most_common_ngram_without_sentence_tokens(
         &mut self
     ) -> Result<(&Vec<String>, &i64), &str> {
-        return self.bigram_counts
+        return self.ngram_counts
             .iter()
             // Have to iter over all elements of the vector, checking they're not in self.sentence_tokens
             .filter(|a| { 
