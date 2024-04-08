@@ -16,7 +16,7 @@ impl BigramModel {
         }
     }
 
-    pub fn get_token_count(
+    fn get_token_count(
         &mut self,
         gram: String
     ) -> i64 {
@@ -26,7 +26,7 @@ impl BigramModel {
         }
     }
 
-    pub fn get_bigram_count(
+    fn get_bigram_count(
         &mut self,
         bigram: (String, String)
     ) -> i64 {
@@ -36,7 +36,7 @@ impl BigramModel {
         }
     }
 
-    pub fn update_token_counts(
+    fn update_token_counts(
         &mut self,
         gram: String
     ) {
@@ -46,7 +46,7 @@ impl BigramModel {
         }
     }
 
-    pub fn update_bigram_counts(
+    fn update_bigram_counts(
         &mut self,
         bigram: (String, String)
     ) {
