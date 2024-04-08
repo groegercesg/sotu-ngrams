@@ -4,7 +4,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_number_tokens() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_keys_tokens() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_values_tokens() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_number_bigrams() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_keys_bigrams() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_values_bigrams() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_basic_probability() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_no_probability() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango monkey mango cake test mango".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_advanced_probability() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_most_common() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
         bmodel.update_bigram_model(line_of_text);
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn biden_2022_most_common() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn biden_2022_most_common_without_sentence_tokens() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn biden_2022_full_test() {
-        let mut bmodel = BigramModel::new();
+        let mut bmodel = BigramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {

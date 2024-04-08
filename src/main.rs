@@ -12,7 +12,7 @@ fn main() {
     let file_path = &args[1];
 
     // Create an instance of the BigramModel
-    let mut bmodel = BigramModel::new();
+    let mut bmodel = BigramModel::new(2);
 
     // File text_sample.txt must exist in the current path
     if let Ok(lines) = read_lines(file_path) {

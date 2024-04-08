@@ -6,16 +6,20 @@ use std::path::Path;
 pub struct BigramModel {
     pub token_counts: HashMap<String, i64>,
     pub bigram_counts: HashMap<Vec<String>, i64>,
+    degree: i64,
     start_of_sentence: String,
     end_of_sentence: String,
     sentence_tokens: Vec<String>
 }
 
 impl BigramModel {
-    pub fn new() -> BigramModel {
+    pub fn new(
+        degree: i64
+    ) -> BigramModel {
         BigramModel {
             token_counts: HashMap::new(),
             bigram_counts: HashMap::new(),
+            degree: degree,
             start_of_sentence: "<S>".to_string(),
             end_of_sentence: "</S>".to_string(),
             sentence_tokens: vec!["<S>".to_string(), "</S>".to_string()]
@@ -66,6 +70,14 @@ impl BigramModel {
         &mut self,
         bigram: &Vec<String>
     ) -> f64 {
+        // To Calculate:
+        // For n_gram [A,B,C]
+        // Given n_gram[0:len-1], what is the probability of n_gram[len]
+        // For n_gram[0:len-1] grams, we need to count how many times these occur (the denominator)
+        // Then we need to store, for each n_gram[0:len-1], how many times each n_gram[len] occurs (numberator)
+
+        
+
         let bigram_count = self.get_bigram_count(bigram.clone());
         let token_count;
         match bigram.get(0) {
@@ -85,9 +97,16 @@ impl BigramModel {
         &mut self,
         line_of_text: String
     ) {
-        let mut prev: &str = &self.start_of_sentence.to_string();
+        let words: Vec<String> = line_of_text.split_whitespace().map(str::to_string).collect();
+        
+        // Add start and end tokens
+        words.insert(0, self.start_of_sentence.to_string());
+        words.push(self.end_of_sentence.to_string());
+        
         // Take a line of text, and update the model with it 
-        for gram in line_of_text.split_whitespace() {
+        for gram in words.windows(self.degree.try_into().unwrap()) {
+            assert!(gram.len() == self.degree.try_into().unwrap());
+            
             // Update token counts
             self.update_token_counts(gram.to_string());
             
@@ -117,7 +136,6 @@ impl BigramModel {
         return self.bigram_counts
             .iter()
             // Have to iter over all elements of the vector, checking they're not in self.sentence_tokens
-            //.filter(|a| !self.sentence_tokens.contains(&a.0.0) && !self.sentence_tokens.contains(&a.0.1))
             .filter(|a| { 
                     a.0.to_vec().iter()
                     .filter(|gram| self.sentence_tokens.contains(gram))
