@@ -55,38 +55,42 @@ impl BigramModel {
             None => { self.bigram_counts.insert(bigram, 1); }
         }
     }
-}
 
-pub fn calculate_bigram_probability(bigram: &(String, String), _bmodel: &mut BigramModel) -> f64 {
-    let bigram_count = _bmodel.get_bigram_count(bigram.clone());
-    let token_count = _bmodel.get_token_count(bigram.0.to_string());
-
-    if token_count.eq(&0) {
-        // Catch a divide by zero to stop it returning NaN
-        return 0 as f64;
-    } else {
-        return bigram_count as f64 / token_count as f64;
-    }    
-}
-
-pub fn update_bigram_model(line_of_text: String, _bmodel: &mut BigramModel) {
-    let mut prev: &str = "<S>";
-    // Take a line of text, and update the model with it 
-    for gram in line_of_text.split_whitespace() {
-        
-        // Update token counts
-        _bmodel.update_token_counts(gram.to_string());
-        
-        // Update bigram counts
-        let bigram = (prev.to_string(), gram.to_string());
-        _bmodel.update_bigram_counts(bigram);
-
-        prev = gram;
-        
+    pub fn calculate_bigram_probability(
+        &mut self,
+        bigram: &(String, String)
+    ) -> f64 {
+        let bigram_count = self.get_bigram_count(bigram.clone());
+        let token_count = self.get_token_count(bigram.0.to_string());
+    
+        if token_count.eq(&0) {
+            // Catch a divide by zero to stop it returning NaN
+            return 0 as f64;
+        } else {
+            return bigram_count as f64 / token_count as f64;
+        }    
     }
 
-    // Add a end-of-sentence token, so the probabilities are cool
-    _bmodel.update_bigram_counts((prev.to_string(), "</S>".to_string()))
+    pub fn update_bigram_model(
+        &mut self,
+        line_of_text: String
+    ) {
+        let mut prev: &str = "<S>";
+        // Take a line of text, and update the model with it 
+        for gram in line_of_text.split_whitespace() {
+            // Update token counts
+            self.update_token_counts(gram.to_string());
+            
+            // Update bigram counts
+            let bigram = (prev.to_string(), gram.to_string());
+            self.update_bigram_counts(bigram);
+    
+            prev = gram;
+        }
+    
+        // Add a end-of-sentence token, so the probabilities are cool
+        self.update_bigram_counts((prev.to_string(), "</S>".to_string()))
+    }
 }
 
 pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>

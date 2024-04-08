@@ -1,8 +1,6 @@
 use std::env;
 
 use grams::BigramModel;
-use grams::update_bigram_model;
-// use grams::calculate_bigram_probability;
 use grams::read_lines;
 
 fn main() {
@@ -21,7 +19,7 @@ fn main() {
         // Use lines from the iterator
         for line in lines.flatten() {
             if !line.is_empty() {
-                update_bigram_model(line, &mut bmodel)
+                bmodel.update_bigram_model(line);
             }
         }
     }

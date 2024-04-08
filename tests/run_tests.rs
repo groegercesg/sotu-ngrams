@@ -1,7 +1,5 @@
 mod tests {
     use grams::BigramModel;
-    use grams::update_bigram_model;
-    use grams::calculate_bigram_probability;
     use grams::read_lines;
 
     #[test]
@@ -9,7 +7,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Number of Tokens
         let got = bmodel.token_counts.keys().len();
@@ -22,7 +20,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Keys of Tokens
         let mut got = bmodel.token_counts.into_keys().collect::<Vec<String>>();
@@ -37,7 +35,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Values of Tokens
         let mut got = bmodel.token_counts.into_values().collect::<Vec<i64>>();
@@ -52,7 +50,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Number of Bigrams
         let got = bmodel.bigram_counts.keys().len();
@@ -65,7 +63,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Keys of Bigrams
         let mut got = bmodel.bigram_counts.into_keys().collect::<Vec<(String, String)>>();
@@ -90,7 +88,7 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Values of Bigrams
         let mut got = bmodel.bigram_counts.into_values().collect::<Vec<i64>>();
@@ -105,11 +103,11 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "This year again we are finally together again".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Probability P("we" | "again") = 0.5
         let sample_bigram = ("again".to_string(), "we".to_string());
-        let got = calculate_bigram_probability(&sample_bigram, &mut bmodel);
+        let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 1 as f64 / 2 as f64;
         assert_eq!(got, want);
     }
@@ -119,11 +117,11 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "mango test test mango monkey mango cake test mango".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Probability P("monkey" | "dogs") = 0
         let sample_bigram = ("dogs".to_string(), "monkey".to_string());
-        let got = calculate_bigram_probability(&sample_bigram, &mut bmodel);
+        let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 0 as f64;
         assert_eq!(got, want);
     }
@@ -133,11 +131,11 @@ mod tests {
         let mut bmodel = BigramModel::new();
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
-        update_bigram_model(line_of_text, &mut bmodel);
+        bmodel.update_bigram_model(line_of_text);
 
         // Probability P("cake" | "mango") = 1 / 4
         let sample_bigram = ("mango".to_string(), "cake".to_string());
-        let got = calculate_bigram_probability(&sample_bigram, &mut bmodel);
+        let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 1 as f64 / 4 as f64;
         assert_eq!(got, want);
     }
@@ -151,14 +149,14 @@ mod tests {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
-                    update_bigram_model(line, &mut bmodel)
+                    bmodel.update_bigram_model(line);
                 }
             }
         }
 
         let test_tuple = ("keep".to_string(), "moving".to_string());
         
-        let got = calculate_bigram_probability(&test_tuple, &mut bmodel);
+        let got = bmodel.calculate_bigram_probability(&test_tuple);
         let want = 0.07692307692307693;
 
         assert_eq!(got, want);
