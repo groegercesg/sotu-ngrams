@@ -25,12 +25,9 @@ fn main() {
     }
 
     // TODO: Filter out '<S>' and '</S>'
+    let most_common_bigram = bmodel.most_common_bigram();
 
-    let most_common_bigram = bmodel.bigram_counts
-            .iter()
-            .max_by(|a, b| a.1.cmp(&b.1))
-            .ok_or("Couldn't find a bigram");
-
+    assert!(most_common_bigram.is_ok());
     println!("Most Frequent Bigram: {:?}. It occurred {:?} times.", 
         most_common_bigram.unwrap().0,
         most_common_bigram.unwrap().1
