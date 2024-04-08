@@ -256,4 +256,26 @@ mod tests {
 
         assert_eq!(got, want);
     }
+
+    #[test]
+    fn biden_2022_3_degree_full_test() {
+        let mut bmodel = BigramModel::new(3);
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_ngram_model(line);
+                }
+            }
+        }
+
+        let test_tuple = vec!["the".to_string(), "United".to_string(), "States".to_string()];
+        
+        let got = bmodel.calculate_ngram_probability(&test_tuple);
+        let want = 0.8571428571428571;
+
+        assert_eq!(got, want);
+    }
 }
