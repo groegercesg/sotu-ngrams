@@ -24,8 +24,7 @@ fn main() {
         }
     }
 
-    // TODO: Filter out '<S>' and '</S>'
-    let most_common_bigram = bmodel.most_common_bigram();
+    let most_common_bigram = bmodel.most_common_bigram_without_sentence_tokens();
 
     assert!(most_common_bigram.is_ok());
     println!("Most Frequent Bigram: {:?}. It occurred {:?} times.", 

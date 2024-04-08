@@ -157,6 +157,52 @@ mod tests {
     }
 
     #[test]
+    fn biden_2022_most_common() {
+        let mut bmodel = BigramModel::new();
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_bigram_model(line);
+                }
+            }
+        }
+
+        let got = bmodel.most_common_bigram();
+        assert!(got.is_ok());
+
+        let want_bigram = ("<S>".to_string(), "And".to_string());
+        assert_eq!(*got.unwrap().0, want_bigram);
+        let want_count = 42;
+        assert_eq!(*got.unwrap().1, want_count);
+    }
+
+    #[test]
+    fn biden_2022_most_common_without_sentence_tokens() {
+        let mut bmodel = BigramModel::new();
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_bigram_model(line);
+                }
+            }
+        }
+
+        let got = bmodel.most_common_bigram_without_sentence_tokens();
+        assert!(got.is_ok());
+
+        let want_bigram = ("of".to_string(), "the".to_string());
+        assert_eq!(*got.unwrap().0, want_bigram);
+        let want_count = 27;
+        assert_eq!(*got.unwrap().1, want_count);
+    }
+
+    #[test]
     fn biden_2022_full_test() {
         let mut bmodel = BigramModel::new();
 
