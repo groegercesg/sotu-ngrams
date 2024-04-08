@@ -66,18 +66,18 @@ mod tests {
         bmodel.update_bigram_model(line_of_text);
 
         // Keys of Bigrams
-        let mut got = bmodel.bigram_counts.into_keys().collect::<Vec<(String, String)>>();
+        let mut got = bmodel.bigram_counts.into_keys().collect::<Vec<Vec<String>>>();
         got.sort();
         let mut want = vec![
-            ("<S>".to_string(), "This".to_string()),
-            ("This".to_string(), "year".to_string()),
-            ("year".to_string(), "again".to_string()),
-            ("again".to_string(), "we".to_string()),
-            ("we".to_string(), "are".to_string()),
-            ("are".to_string(), "finally".to_string()),
-            ("finally".to_string(), "together".to_string()),
-            ("together".to_string(), "again".to_string()),
-            ("again".to_string(), "</S>".to_string()),
+            vec!["<S>".to_string(), "This".to_string()],
+            vec!["This".to_string(), "year".to_string()],
+            vec!["year".to_string(), "again".to_string()],
+            vec!["again".to_string(), "we".to_string()],
+            vec!["we".to_string(), "are".to_string()],
+            vec!["are".to_string(), "finally".to_string()],
+            vec!["finally".to_string(), "together".to_string()],
+            vec!["together".to_string(), "again".to_string()],
+            vec!["again".to_string(), "</S>".to_string()],
         ];
         want.sort();
         assert_eq!(got, want);
@@ -106,7 +106,7 @@ mod tests {
         bmodel.update_bigram_model(line_of_text);
 
         // Probability P("we" | "again") = 0.5
-        let sample_bigram = ("again".to_string(), "we".to_string());
+        let sample_bigram = vec!["again".to_string(), "we".to_string()];
         let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 1 as f64 / 2 as f64;
         assert_eq!(got, want);
@@ -120,7 +120,7 @@ mod tests {
         bmodel.update_bigram_model(line_of_text);
 
         // Probability P("monkey" | "dogs") = 0
-        let sample_bigram = ("dogs".to_string(), "monkey".to_string());
+        let sample_bigram = vec!["dogs".to_string(), "monkey".to_string()];
         let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 0 as f64;
         assert_eq!(got, want);
@@ -134,7 +134,7 @@ mod tests {
         bmodel.update_bigram_model(line_of_text);
 
         // Probability P("cake" | "mango") = 1 / 4
-        let sample_bigram = ("mango".to_string(), "cake".to_string());
+        let sample_bigram = vec!["mango".to_string(), "cake".to_string()];
         let got = bmodel.calculate_bigram_probability(&sample_bigram);
         let want = 1 as f64 / 4 as f64;
         assert_eq!(got, want);
@@ -150,7 +150,7 @@ mod tests {
         let got = bmodel.most_common_bigram();
         assert!(got.is_ok());
 
-        let want_bigram = ("test".to_string(), "mango".to_string());
+        let want_bigram = vec!["test".to_string(), "mango".to_string()];
         assert_eq!(*got.unwrap().0, want_bigram);
         let want_count = 2;
         assert_eq!(*got.unwrap().1, want_count);
@@ -173,7 +173,7 @@ mod tests {
         let got = bmodel.most_common_bigram();
         assert!(got.is_ok());
 
-        let want_bigram = ("<S>".to_string(), "And".to_string());
+        let want_bigram = vec!["<S>".to_string(), "And".to_string()];
         assert_eq!(*got.unwrap().0, want_bigram);
         let want_count = 42;
         assert_eq!(*got.unwrap().1, want_count);
@@ -196,7 +196,7 @@ mod tests {
         let got = bmodel.most_common_bigram_without_sentence_tokens();
         assert!(got.is_ok());
 
-        let want_bigram = ("of".to_string(), "the".to_string());
+        let want_bigram = vec!["of".to_string(), "the".to_string()];
         assert_eq!(*got.unwrap().0, want_bigram);
         let want_count = 27;
         assert_eq!(*got.unwrap().1, want_count);
@@ -216,7 +216,7 @@ mod tests {
             }
         }
 
-        let test_tuple = ("keep".to_string(), "moving".to_string());
+        let test_tuple = vec!["keep".to_string(), "moving".to_string()];
         
         let got = bmodel.calculate_bigram_probability(&test_tuple);
         let want = 0.07692307692307693;
