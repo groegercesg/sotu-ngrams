@@ -5,7 +5,7 @@ use std::path::Path;
 
 pub struct BigramModel {
     pub token_counts: HashMap<String, i64>,
-    pub bigram_counts: HashMap<(String, String), i64>,
+    pub bigram_counts: HashMap<Vec<String>, i64>,
     start_of_sentence: String,
     end_of_sentence: String,
     sentence_tokens: Vec<String>
@@ -34,7 +34,7 @@ impl BigramModel {
 
     fn get_bigram_count(
         &mut self,
-        bigram: (String, String)
+        bigram: Vec<String>
     ) -> i64 {
         match self.bigram_counts.get(&bigram) {
             Some(count) => { return *count; }
@@ -54,7 +54,7 @@ impl BigramModel {
 
     fn update_bigram_counts(
         &mut self,
-        bigram: (String, String)
+        bigram: Vec<String>
     ) {
         match self.bigram_counts.get(&bigram) {
             Some(count) => { self.bigram_counts.insert(bigram, count + 1); }
@@ -64,10 +64,14 @@ impl BigramModel {
 
     pub fn calculate_bigram_probability(
         &mut self,
-        bigram: &(String, String)
+        bigram: &Vec<String>
     ) -> f64 {
         let bigram_count = self.get_bigram_count(bigram.clone());
-        let token_count = self.get_token_count(bigram.0.to_string());
+        let token_count;
+        match bigram.get(0) {
+            Some(gram) => { token_count = self.get_token_count(gram.to_string()); }
+            None => { panic!("Bigram wasn't large enough: {:#?}", bigram); }
+        }
     
         if token_count.eq(&0) {
             // Catch a divide by zero to stop it returning NaN
@@ -88,19 +92,19 @@ impl BigramModel {
             self.update_token_counts(gram.to_string());
             
             // Update bigram counts
-            let bigram = (prev.to_string(), gram.to_string());
+            let bigram = vec![prev.to_string(), gram.to_string()];
             self.update_bigram_counts(bigram);
     
             prev = gram;
         }
     
         // Add a end-of-sentence token, so the probabilities are cool
-        self.update_bigram_counts((prev.to_string(), self.end_of_sentence.to_string()))
+        self.update_bigram_counts(vec![prev.to_string(), self.end_of_sentence.to_string()])
     }
 
     pub fn most_common_bigram(
         &mut self
-    ) -> Result<(&(String, String), &i64), &str> {
+    ) -> Result<(&Vec<String>, &i64), &str> {
         return self.bigram_counts
             .iter()
             .max_by(|a, b| a.1.cmp(&b.1))
@@ -109,10 +113,17 @@ impl BigramModel {
 
     pub fn most_common_bigram_without_sentence_tokens(
         &mut self
-    ) -> Result<(&(String, String), &i64), &str> {
+    ) -> Result<(&Vec<String>, &i64), &str> {
         return self.bigram_counts
             .iter()
-            .filter(|a| !self.sentence_tokens.contains(&a.0.0) && !self.sentence_tokens.contains(&a.0.1))
+            // Have to iter over all elements of the vector, checking they're not in self.sentence_tokens
+            //.filter(|a| !self.sentence_tokens.contains(&a.0.0) && !self.sentence_tokens.contains(&a.0.1))
+            .filter(|a| { 
+                    a.0.to_vec().iter()
+                    .filter(|gram| self.sentence_tokens.contains(gram))
+                    .count() == 0
+                }
+            )
             .max_by(|a, b| a.1.cmp(&b.1))
             .ok_or("Couldn't find a bigram");
     }
