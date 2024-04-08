@@ -3,58 +3,91 @@ mod tests {
     use grams::read_lines;
 
     #[test]
-    fn basic_line_of_text_number_tokens() {
+    fn basic_line_of_text_number_pen_grams() {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Number of Tokens
-        let got = bmodel.token_counts.keys().len();
-        let want = 7;
+        let got = bmodel.penultimate_gram_counts.keys().len();
+        let want = 8;
         assert_eq!(got, want);
     }
 
     #[test]
-    fn basic_line_of_text_keys_tokens() {
+    fn basic_line_of_text_keys_pen_grams() {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Keys of Tokens
-        let mut got = bmodel.token_counts.into_keys().collect::<Vec<String>>();
+        let mut got = bmodel.penultimate_gram_counts.into_keys().collect::<Vec<Vec<String>>>();
         got.sort();
-        let mut want = vec!["This".to_string(), "again".into(), "are".into(), "finally".into(), "together".into(), "we".into(), "year".into()];
+        let mut want = vec![
+            vec!["<S>".to_string()],
+            vec!["This".to_string()],
+            vec!["again".into()],
+            vec!["are".into()],
+            vec!["finally".into()],
+            vec!["together".into()],
+            vec!["we".into()],
+            vec!["year".into()]
+        ];
         want.sort();
         assert_eq!(got, want);
     }
 
     #[test]
-    fn basic_line_of_text_values_tokens() {
+    fn basic_line_of_text_values_pen_grams() {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Values of Tokens
-        let mut got = bmodel.token_counts.into_values().collect::<Vec<i64>>();
+        let mut got = bmodel.penultimate_gram_counts.into_values().collect::<Vec<i64>>();
         got.sort();
-        let mut want = vec![2, 1, 1, 1, 1, 1, 1];
+        let mut want = vec![2, 1, 1, 1, 1, 1, 1, 1];
         want.sort();
         assert_eq!(got, want);
     }
 
     #[test]
-    fn basic_line_of_text_number_bigrams() {
+    fn basic_line_of_text_keys_pen_grams_given_last() {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
+
+        // Keys of Tokens
+        let mut got = bmodel.last_given_penultimate_counts.into_keys().collect::<Vec<Vec<String>>>();
+        got.sort();
+        let mut want = vec![
+            vec!["<S>".to_string()],
+            vec!["This".to_string()],
+            vec!["again".into()],
+            vec!["are".into()],
+            vec!["finally".into()],
+            vec!["together".into()],
+            vec!["we".into()],
+            vec!["year".into()]
+        ];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn basic_line_of_text_number_bigrams_given_last() {
+        let mut bmodel = BigramModel::new(2);
+
+        let line_of_text = "This year again we are finally together again".to_string();
+        bmodel.update_ngram_model(line_of_text);
 
         // Number of Bigrams
-        let got = bmodel.bigram_counts.keys().len();
-        let want = 9;
+        let got = bmodel.last_given_penultimate_counts.keys().len();
+        let want = 8;
         assert_eq!(got, want);
     }
 
@@ -63,10 +96,10 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Keys of Bigrams
-        let mut got = bmodel.bigram_counts.into_keys().collect::<Vec<Vec<String>>>();
+        let mut got = bmodel.ngram_counts.into_keys().collect::<Vec<Vec<String>>>();
         got.sort();
         let mut want = vec![
             vec!["<S>".to_string(), "This".to_string()],
@@ -88,10 +121,10 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Values of Bigrams
-        let mut got = bmodel.bigram_counts.into_values().collect::<Vec<i64>>();
+        let mut got = bmodel.ngram_counts.into_values().collect::<Vec<i64>>();
         got.sort();
         let mut want = vec![1,1,1,1,1,1,1,1,1];
         want.sort();
@@ -103,11 +136,11 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Probability P("we" | "again") = 0.5
         let sample_bigram = vec!["again".to_string(), "we".to_string()];
-        let got = bmodel.calculate_bigram_probability(&sample_bigram);
+        let got = bmodel.calculate_ngram_probability(&sample_bigram);
         let want = 1 as f64 / 2 as f64;
         assert_eq!(got, want);
     }
@@ -117,11 +150,11 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango monkey mango cake test mango".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Probability P("monkey" | "dogs") = 0
         let sample_bigram = vec!["dogs".to_string(), "monkey".to_string()];
-        let got = bmodel.calculate_bigram_probability(&sample_bigram);
+        let got = bmodel.calculate_ngram_probability(&sample_bigram);
         let want = 0 as f64;
         assert_eq!(got, want);
     }
@@ -131,11 +164,11 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
         // Probability P("cake" | "mango") = 1 / 4
         let sample_bigram = vec!["mango".to_string(), "cake".to_string()];
-        let got = bmodel.calculate_bigram_probability(&sample_bigram);
+        let got = bmodel.calculate_ngram_probability(&sample_bigram);
         let want = 1 as f64 / 4 as f64;
         assert_eq!(got, want);
     }
@@ -145,9 +178,9 @@ mod tests {
         let mut bmodel = BigramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
-        bmodel.update_bigram_model(line_of_text);
+        bmodel.update_ngram_model(line_of_text);
 
-        let got = bmodel.most_common_bigram();
+        let got = bmodel.most_common_ngram();
         assert!(got.is_ok());
 
         let want_bigram = vec!["test".to_string(), "mango".to_string()];
@@ -165,12 +198,12 @@ mod tests {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
-                    bmodel.update_bigram_model(line);
+                    bmodel.update_ngram_model(line);
                 }
             }
         }
 
-        let got = bmodel.most_common_bigram();
+        let got = bmodel.most_common_ngram();
         assert!(got.is_ok());
 
         let want_bigram = vec!["<S>".to_string(), "And".to_string()];
@@ -188,12 +221,12 @@ mod tests {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
-                    bmodel.update_bigram_model(line);
+                    bmodel.update_ngram_model(line);
                 }
             }
         }
 
-        let got = bmodel.most_common_bigram_without_sentence_tokens();
+        let got = bmodel.most_common_ngram_without_sentence_tokens();
         assert!(got.is_ok());
 
         let want_bigram = vec!["of".to_string(), "the".to_string()];
@@ -211,14 +244,14 @@ mod tests {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
-                    bmodel.update_bigram_model(line);
+                    bmodel.update_ngram_model(line);
                 }
             }
         }
 
         let test_tuple = vec!["keep".to_string(), "moving".to_string()];
         
-        let got = bmodel.calculate_bigram_probability(&test_tuple);
+        let got = bmodel.calculate_ngram_probability(&test_tuple);
         let want = 0.07692307692307693;
 
         assert_eq!(got, want);
