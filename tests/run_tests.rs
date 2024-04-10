@@ -117,6 +117,27 @@ mod tests {
     }
 
     #[test]
+    fn penta_gram_edge_case() {
+        let mut bmodel = NGramModel::new(5);
+
+        let line_of_text = "This".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // Keys of Ngrams
+        let mut got = bmodel.ngram_counts.into_keys().collect::<Vec<Vec<String>>>();
+        got.sort();
+        let mut want = vec![
+            vec!["<S>".to_string(), "<S>".to_string(), "<S>".to_string(), "<S>".to_string(), "This".to_string()],
+            vec!["<S>".to_string(), "<S>".to_string(), "<S>".to_string(), "This".to_string(), "</S>".to_string()],
+            vec!["<S>".to_string(), "<S>".to_string(), "This".to_string(), "</S>".to_string(), "</S>".to_string()],
+            vec!["<S>".to_string(), "This".to_string(), "</S>".to_string(), "</S>".to_string(), "</S>".to_string()],
+            vec!["This".to_string(), "</S>".to_string(), "</S>".to_string(), "</S>".to_string(), "</S>".to_string()],
+        ];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn basic_line_of_text_keys_trigrams() {
         let mut bmodel = NGramModel::new(3);
 

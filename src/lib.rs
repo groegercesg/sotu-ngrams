@@ -142,8 +142,6 @@ impl NGramModel {
             words.insert(0, self.start_of_sentence.to_string());
             words.push(self.end_of_sentence.to_string());
         }
-
-        // TODO: What if degree > words?
         
         // Take a line of text, and update the model with it 
         for ngram in words.windows(self.degree.try_into().unwrap()) {
