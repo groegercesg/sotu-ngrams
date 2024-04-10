@@ -123,6 +123,21 @@ impl NGramModel {
     // TODO: Probability_of_sentence
     //       P(w1) * PROD P(Wn | Wn-1)
     //       Sum log probs, in and out
+    // Unigram:  ( 1 )
+    //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=1} P(wi)
+    // Bigram:   ( 2 )
+    //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=2} P(wi|wi−1)
+    // Trigram:  ( 3 )
+    //  P(w1, . . . wn) = P(w1)P(w2|w1) PROD^{n}_{i=3} P(wi|wi−2, wi−1)
+    // Quadgram: ( 4 )
+    //  P(w1, . . . wn) = P(w1)P(w2|w1)P(w3|w2, w1) PROD^{n}_{i=4} P(wi|wi-3, wi−2, wi−1)
+    //
+    // pub fn probability_of_sentence(
+    //     &mut self,
+    //     line_of_text: String
+    // ) {
+
+    // }
 
 
     // TODO: generate_text
