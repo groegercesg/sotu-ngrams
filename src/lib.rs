@@ -137,10 +137,11 @@ impl NGramModel {
 
         let mut words: Vec<String> = cleaned_text.split_whitespace().map(str::to_string).collect();
         
-        // TODO: degree - 1 padding
-        // Add start and end tokens
-        words.insert(0, self.start_of_sentence.to_string());
-        words.push(self.end_of_sentence.to_string());
+        // Add (degree - 1) start and end tokens to the words
+        for _i in 0..(self.degree - 1) {
+            words.insert(0, self.start_of_sentence.to_string());
+            words.push(self.end_of_sentence.to_string());
+        }
 
         // TODO: What if degree > words?
         

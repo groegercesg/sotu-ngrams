@@ -117,6 +117,33 @@ mod tests {
     }
 
     #[test]
+    fn basic_line_of_text_keys_trigrams() {
+        let mut bmodel = NGramModel::new(3);
+
+        let line_of_text = "This year again we are finally together again".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // Keys of Bigrams
+        let mut got = bmodel.ngram_counts.into_keys().collect::<Vec<Vec<String>>>();
+        got.sort();
+        let mut want = vec![
+            vec!["<S>".to_string(), "<S>".to_string(), "This".to_string()],
+            vec!["<S>".to_string(), "This".to_string(), "year".to_string()],
+            vec!["This".to_string(), "year".to_string(), "again".to_string()],
+            vec!["year".to_string(), "again".to_string(), "we".to_string()],
+            vec!["again".to_string(), "we".to_string(), "are".to_string()],
+            vec!["we".to_string(), "are".to_string(), "finally".to_string()],
+            vec!["are".to_string(), "finally".to_string(), "together".to_string()],
+            vec!["finally".to_string(), "together".to_string(), "again".to_string()],
+            vec!["together".to_string(), "again".to_string(), "</S>".to_string()],
+            vec!["again".to_string(), "</S>".to_string(), "</S>".to_string()],
+        ];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+
+    #[test]
     fn minimal_line_of_text_filter_punctuation_bigrams() {
         let mut bmodel = NGramModel::new(2);
 
@@ -233,7 +260,7 @@ mod tests {
 
         let want_bigram = vec!["<S>".to_string(), "And".to_string()];
         assert_eq!(*got.unwrap().0, want_bigram);
-        let want_count = 42;
+        let want_count = 43;
         assert_eq!(*got.unwrap().1, want_count);
     }
 
@@ -277,7 +304,7 @@ mod tests {
         let test_tuple = vec!["keep".to_string(), "moving".to_string()];
         
         let got = bmodel.calculate_ngram_probability(&test_tuple);
-        let want = 0.07692307692307693;
+        let want = 0.15384615384615385;
 
         assert_eq!(got, want);
     }
