@@ -1,10 +1,10 @@
 mod tests {
-    use grams::BigramModel;
+    use grams::NGramModel;
     use grams::read_lines;
 
     #[test]
     fn basic_line_of_text_number_pen_grams() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_keys_pen_grams() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_values_pen_grams() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_keys_pen_grams_given_last() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_number_bigrams_given_last() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_keys_bigrams() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -117,8 +117,33 @@ mod tests {
     }
 
     #[test]
+    fn minimal_line_of_text_filter_punctuation_bigrams() {
+        let mut bmodel = NGramModel::new(2);
+
+        let line_of_text = "This! year agai-n we are final/ly together. again.".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // Keys of Bigrams
+        let mut got = bmodel.ngram_counts.into_keys().collect::<Vec<Vec<String>>>();
+        got.sort();
+        let mut want = vec![
+            vec!["<S>".to_string(), "This".to_string()],
+            vec!["This".to_string(), "year".to_string()],
+            vec!["year".to_string(), "again".to_string()],
+            vec!["again".to_string(), "we".to_string()],
+            vec!["we".to_string(), "are".to_string()],
+            vec!["are".to_string(), "finally".to_string()],
+            vec!["finally".to_string(), "together".to_string()],
+            vec!["together".to_string(), "again".to_string()],
+            vec!["again".to_string(), "</S>".to_string()],
+        ];
+        want.sort();
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn basic_line_of_text_values_bigrams() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -133,7 +158,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_basic_probability() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "This year again we are finally together again".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -147,7 +172,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_no_probability() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "mango test test mango monkey mango cake test mango".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -161,7 +186,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_advanced_probability() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -175,7 +200,7 @@ mod tests {
 
     #[test]
     fn basic_line_of_text_most_common() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         let line_of_text = "mango test test mango cake mango monkey test mango".to_string();
         bmodel.update_ngram_model(line_of_text);
@@ -191,7 +216,7 @@ mod tests {
 
     #[test]
     fn biden_2022_most_common() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
@@ -214,7 +239,7 @@ mod tests {
 
     #[test]
     fn biden_2022_most_common_without_sentence_tokens() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
@@ -237,7 +262,7 @@ mod tests {
 
     #[test]
     fn biden_2022_full_test() {
-        let mut bmodel = BigramModel::new(2);
+        let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
@@ -259,7 +284,7 @@ mod tests {
 
     #[test]
     fn biden_2022_3_degree_full_test() {
-        let mut bmodel = BigramModel::new(3);
+        let mut bmodel = NGramModel::new(3);
 
         // File text_sample.txt must exist in the current path
         if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {

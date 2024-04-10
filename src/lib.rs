@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
-pub struct BigramModel {
+pub struct NGramModel {
     pub last_given_penultimate_counts: HashMap<Vec<String>, HashMap<String, i64>>,
     pub penultimate_gram_counts: HashMap<Vec<String>, i64>,
     pub ngram_counts: HashMap<Vec<String>, i64>,
@@ -13,11 +13,11 @@ pub struct BigramModel {
     sentence_tokens: Vec<String>
 }
 
-impl BigramModel {
+impl NGramModel {
     pub fn new(
         degree: i64
-    ) -> BigramModel {
-        BigramModel {
+    ) -> NGramModel {
+        NGramModel {
             last_given_penultimate_counts: HashMap::new(),
             penultimate_gram_counts: HashMap::new(),
             ngram_counts: HashMap::new(),
@@ -120,12 +120,24 @@ impl BigramModel {
         }
     }
 
+    // TODO: Probability_of_sentence
+    //       P(w1) * PROD P(Wn | Wn-1)
+    //       Sum log probs, in and out
+
+
+    // TODO: generate_text
+    //       method: most frequent (greedy)
+    //               probabilistic, random sampling, the biased dice thing
+
     pub fn update_ngram_model(
         &mut self,
         line_of_text: String
     ) {
-        let mut words: Vec<String> = line_of_text.split_whitespace().map(str::to_string).collect();
+        let cleaned_text = line_of_text.replace(&['(', ')', ',', '\"', '.', ';', ':', '\'', '-', '!', '?', '"', '[', ']', '/', '\\'][..], "");
+
+        let mut words: Vec<String> = cleaned_text.split_whitespace().map(str::to_string).collect();
         
+        // TODO: degree - 1 padding
         // Add start and end tokens
         words.insert(0, self.start_of_sentence.to_string());
         words.push(self.end_of_sentence.to_string());
