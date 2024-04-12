@@ -155,20 +155,15 @@ impl NGramModel {
             ).map(|(_a, b)| b).sum();
     }
 
-    fn sum_of_ngram_counts(
-        &mut self
-    ) -> i64 {
-        return self.ngram_counts.values().sum();
-    }
-
     pub fn probability_for_partial_ngram(
         &mut self,
         partial_gram: &Vec<String>
     ) -> f64 {
         assert!(partial_gram.len() < self.degree.try_into().unwrap());
         if partial_gram.len() == 1 {
-            // Divide by size of ngrams
-            return self.count_of_partial_ngram(partial_gram) as f64 / self.sum_of_ngram_counts() as f64;
+            // Divide by total number of ngrams
+            let total_number_of_ngrams: i64 = self.ngram_counts.values().sum();
+            return self.count_of_partial_ngram(partial_gram) as f64 / total_number_of_ngrams as f64;
         } else {
             // P(w2|w1) = count(gram[w1, w2]) / count(gram[w1])
             // P(w3|w2, w1) = count(gram[w1, w2, w3]) / count(gram[w1, w2])
