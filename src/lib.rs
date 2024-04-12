@@ -122,7 +122,7 @@ impl NGramModel {
 
     // TODO: Probability_of_sentence
     //       P(w1) * PROD P(Wn | Wn-1)
-    //       Sum log probs, in and out
+    // TODO: Sum log probs, in and out
     // Unigram:  ( 1 )
     //  P(w1, . . . wn) = PROD^{n}_{i=1} P(wi)
     // Bigram:   ( 2 )
@@ -134,12 +134,21 @@ impl NGramModel {
     //
     // P(w1), for Bigram, means all the grams that start with w1, divided by count of all
     //
-    // pub fn probability_of_sentence(
-    //     &mut self,
-    //     line_of_text: String
-    // ) {
-
-    // }
+    pub fn probability_of_sentence(
+        &mut self,
+        line_of_text: String
+    ) -> f64 {
+        let words: Vec<String> = self.string_to_string_vec(line_of_text);
+        if words.len() < self.degree.try_into().unwrap() {
+            return self.probability_for_partial_ngram(&words);
+        } else if words.len() == self.degree.try_into().unwrap() {
+            return self.calculate_ngram_probability(&words)
+        } else {
+            // words.len() > self.degree
+            // TODO: Follow paradigm above
+            return 0.0;
+        }
+    }
 
     fn count_of_partial_ngram(
         &mut self,
@@ -172,6 +181,14 @@ impl NGramModel {
         }
     }
 
+    fn string_to_string_vec(
+        &mut self,
+        line_of_text: String
+    ) -> Vec<String>{
+        let cleaned_text = line_of_text.replace(&['(', ')', ',', '\"', '.', ';', ':', '\'', '-', '!', '?', '"', '[', ']', '/', '\\'][..], "");
+        return cleaned_text.split_whitespace().map(str::to_string).collect();
+    }
+
 
     // TODO: generate_text
     //       method: most frequent (greedy)
@@ -181,9 +198,7 @@ impl NGramModel {
         &mut self,
         line_of_text: String
     ) {
-        let cleaned_text = line_of_text.replace(&['(', ')', ',', '\"', '.', ';', ':', '\'', '-', '!', '?', '"', '[', ']', '/', '\\'][..], "");
-
-        let mut words: Vec<String> = cleaned_text.split_whitespace().map(str::to_string).collect();
+        let mut words: Vec<String> = self.string_to_string_vec(line_of_text);
         
         // Add (degree - 1) start and end tokens to the words
         for _i in 0..(self.degree - 1) {
