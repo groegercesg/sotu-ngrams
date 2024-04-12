@@ -3,6 +3,52 @@ mod tests {
     use grams::read_lines;
 
     #[test]
+    fn prob_of_partial_gram_bigram() {
+        let mut bmodel = NGramModel::new(2);
+
+        let line_of_text = "This year again we are finally together again we".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // Number of Tokens
+        let got = bmodel.ngram_counts.len();
+        let want = 9;
+        assert_eq!(got, want);
+
+        let partial_ngram = vec!["again".to_string()];
+        let got = bmodel.probability_for_partial_ngram(&partial_ngram);
+        let want = 2 as f64 / 10 as f64;
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn prob_of_partial_gram_trigram() {
+        let mut bmodel = NGramModel::new(3);
+
+        let line_of_text = "mango test test mango cake test mango cake monkey cake test mango cake".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // Number of Tokens
+        let got = bmodel.ngram_counts.len();
+        let want = 12;
+        assert_eq!(got, want);
+
+        let partial_ngram = vec!["mango".to_string(), "test".to_string()];
+        let got = bmodel.probability_for_partial_ngram(&partial_ngram);
+        let want = 1 as f64 / 4 as f64;
+        assert_eq!(got, want);
+
+        let partial_ngram = vec!["cake".to_string(), "test".to_string()];
+        let got = bmodel.probability_for_partial_ngram(&partial_ngram);
+        let want = 2 as f64 / 4 as f64;
+        assert_eq!(got, want);
+
+        let partial_ngram = vec!["mango".to_string(), "cake".to_string()];
+        let got = bmodel.probability_for_partial_ngram(&partial_ngram);
+        let want = 3 as f64 / 4 as f64;
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn basic_line_of_text_number_pen_grams() {
         let mut bmodel = NGramModel::new(2);
 

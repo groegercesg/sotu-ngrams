@@ -124,7 +124,7 @@ impl NGramModel {
     //       P(w1) * PROD P(Wn | Wn-1)
     //       Sum log probs, in and out
     // Unigram:  ( 1 )
-    //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=1} P(wi)
+    //  P(w1, . . . wn) = PROD^{n}_{i=1} P(wi)
     // Bigram:   ( 2 )
     //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=2} P(wi|wi−1)
     // Trigram:  ( 3 )
@@ -132,12 +132,50 @@ impl NGramModel {
     // Quadgram: ( 4 )
     //  P(w1, . . . wn) = P(w1)P(w2|w1)P(w3|w2, w1) PROD^{n}_{i=4} P(wi|wi-3, wi−2, wi−1)
     //
+    // P(w1), for Bigram, means all the grams that start with w1, divided by count of all
+    //
     // pub fn probability_of_sentence(
     //     &mut self,
     //     line_of_text: String
     // ) {
 
     // }
+
+    fn count_of_partial_ngram(
+        &mut self,
+        partial_gram: &Vec<String>
+    ) -> i64 {
+        let partial_size = partial_gram.len();
+        // Filter ngram_counts for the keys, sliced to partial_size, equal to partial_gram
+        // Sum the values and return
+        return self.ngram_counts
+            .iter()
+            .filter(|a|
+                    a.0.to_vec()[0..partial_size] == partial_gram.to_vec()
+            ).map(|(_a, b)| b).sum();
+    }
+
+    fn sum_of_ngram_counts(
+        &mut self
+    ) -> i64 {
+        return self.ngram_counts.values().sum();
+    }
+
+    pub fn probability_for_partial_ngram(
+        &mut self,
+        partial_gram: &Vec<String>
+    ) -> f64 {
+        assert!(partial_gram.len() < self.degree.try_into().unwrap());
+        if partial_gram.len() == 1 {
+            // Divide by size of ngrams
+            return self.count_of_partial_ngram(partial_gram) as f64 / self.sum_of_ngram_counts() as f64;
+        } else {
+            // P(w2|w1) = count(gram[w1, w2]) / count(gram[w1])
+            // P(w3|w2, w1) = count(gram[w1, w2, w3]) / count(gram[w1, w2])
+            let context_partial_gram = &partial_gram[0..partial_gram.len() - 1].to_vec();
+            return self.count_of_partial_ngram(partial_gram) as f64 / self.count_of_partial_ngram(context_partial_gram) as f64;
+        }
+    }
 
 
     // TODO: generate_text
