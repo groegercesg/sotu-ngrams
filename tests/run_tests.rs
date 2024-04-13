@@ -3,6 +3,48 @@ mod tests {
     use grams::read_lines;
 
     #[test]
+    fn probability_of_sentence_bigram_valid() {
+        let mut bmodel = NGramModel::new(2);
+
+        let line_of_text = "This year again we are finally together are again we".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // TODO: Check with Emily if this makes sense
+        let test_sentence = "This year again we are again".to_string();
+        let got = bmodel.probability_of_sentence(test_sentence);
+        let want = 0.022727272727272728;
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn probability_of_sentence_bigram() {
+        let mut bmodel = NGramModel::new(2);
+
+        let line_of_text = "This year again we are finally together again we".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // TODO: Check with Emily if this makes sense
+        let test_sentence = "This year again we are not happy".to_string();
+        let got = bmodel.probability_of_sentence(test_sentence);
+        let want = 0.0;
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn probability_of_sentence_trigram() {
+        let mut bmodel = NGramModel::new(3);
+
+        let line_of_text = "This year again we are finally together again we".to_string();
+        bmodel.update_ngram_model(line_of_text);
+
+        // TODO: Check with Emily if this makes sense
+        let test_sentence = "This is a sentence we want to test".to_string();
+        let got = bmodel.probability_of_sentence(test_sentence);
+        let want = 0.0;
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn prob_of_partial_gram_bigram() {
         let mut bmodel = NGramModel::new(2);
 
