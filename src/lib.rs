@@ -120,24 +120,22 @@ impl NGramModel {
         }
     }
 
-    // TODO: Probability_of_sentence
-    //       P(w1) * PROD P(Wn | Wn-1)
-    // TODO: Sum log probs, in and out
-    // Unigram:  ( 1 )
-    //  P(w1, . . . wn) = PROD^{n}_{i=1} P(wi)
-    // Bigram:   ( 2 )
-    //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=2} P(wi|wi−1)
-    // Trigram:  ( 3 )
-    //  P(w1, . . . wn) = P(w1)P(w2|w1) PROD^{n}_{i=3} P(wi|wi−2, wi−1)
-    // Quadgram: ( 4 )
-    //  P(w1, . . . wn) = P(w1)P(w2|w1)P(w3|w2, w1) PROD^{n}_{i=4} P(wi|wi-3, wi−2, wi−1)
-    //
-    // P(w1), for Bigram, means all the grams that start with w1, divided by count of all
-    //
+    // TODO: Sum log probs, in and out - where should I use log probs - everywhere?
+
     pub fn probability_of_sentence(
         &mut self,
         line_of_text: String
     ) -> f64 {
+        // Calculation equations
+        // Unigram:  ( 1 )
+        //  P(w1, . . . wn) = PROD^{n}_{i=1} P(wi)
+        // Bigram:   ( 2 )
+        //  P(w1, . . . wn) = P(w1) PROD^{n}_{i=2} P(wi|wi−1)
+        // Trigram:  ( 3 )
+        //  P(w1, . . . wn) = P(w1)P(w2|w1) PROD^{n}_{i=3} P(wi|wi−2, wi−1)
+        // Quadgram: ( 4 )
+        //  P(w1, . . . wn) = P(w1)P(w2|w1)P(w3|w2, w1) PROD^{n}_{i=4} P(wi|wi-3, wi−2, wi−1)
+
         let words: Vec<String> = self.string_to_string_vec(line_of_text);
         if words.len() < self.degree.try_into().unwrap() {
             return self.probability_for_partial_ngram(&words);
@@ -145,8 +143,32 @@ impl NGramModel {
             return self.calculate_ngram_probability(&words)
         } else {
             // words.len() > self.degree
-            // TODO: Follow paradigm above
-            return 0.0;
+
+            // Populate a vector of all the probabilities
+            let mut probabilities: Vec<f64> = vec![];
+            if self.degree != 1 {
+                // Do the first part of the calculation
+                for i in 1..self.degree {
+                    let current_size = i.try_into().unwrap();
+                    probabilities.push(
+                        self.probability_for_partial_ngram(
+                            &words[0..current_size].to_vec()
+                        )
+                    );
+                }
+            } 
+            
+            // We need to skip the first section
+            let words_start_point = (self.degree - 1).try_into().unwrap();
+            for grams in words[words_start_point..].windows(self.degree.try_into().unwrap()) {
+                probabilities.push(self.calculate_ngram_probability(&grams.to_vec()))
+            }
+
+            return probabilities
+                .iter()
+                .copied()
+                .reduce(|a, b| a * b)
+                .unwrap();
         }
     }
 
