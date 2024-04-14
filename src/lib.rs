@@ -271,12 +271,27 @@ impl NGramModel {
                     a.0.to_vec()[0..history_size] == history.to_vec())
             .collect();
 
-        let most_frequent_ngram = suitable_ngrams
+        // Calculate maximum value
+        let max_value = **suitable_ngrams
             .iter()
             .max_by(|a, b| a.1.cmp(&b.1))
-            .ok_or("Couldn't find a bigram").unwrap().0;
+            .map(|(_k, v)| v)
+            .ok_or("Couldn't find a bigram").unwrap();
 
-        return most_frequent_ngram.to_vec().last().unwrap().to_string();
+        // The conditions here aren't enough to give deterministic output, what if they have 
+        // the same count but different contents, we should sort as well
+        let mut maximum_ngrams: Vec<String> = suitable_ngrams
+            .iter()
+            .filter(|a|
+                **a.1 == max_value)
+            .map(|(k , _v)| k.last().unwrap().to_string())
+            .collect();
+
+        // Sort alphabetically
+        maximum_ngrams.sort();
+        let most_frequent_gram: String = maximum_ngrams.first().unwrap().to_string();
+
+        return most_frequent_gram;
     }
 
     pub fn update_ngram_model(
