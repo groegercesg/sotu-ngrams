@@ -3,6 +3,67 @@ mod tests {
     use grams::read_lines;
 
     #[test]
+    fn generate_text_trigram_biden_2024() {
+        let mut bmodel = NGramModel::new(3);
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2024.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_ngram_model(line);
+                }
+            }
+        }
+
+        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        
+        let want = "I see a future where we all come from somewhere but we are".to_string();
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn generate_text_quadgram_biden_2022() {
+        let mut bmodel = NGramModel::new(4);
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_ngram_model(line);
+                }
+            }
+        }
+
+        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        
+        let want = "And we will as one people".to_string();
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn generate_text_unigram_biden_2022() {
+        let mut bmodel = NGramModel::new(1);
+
+        // File text_sample.txt must exist in the current path
+        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+            // Use lines from the iterator
+            for line in lines.flatten() {
+                if !line.is_empty() {
+                    bmodel.update_ngram_model(line);
+                }
+            }
+        }
+
+        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        
+        // This will be the most probable word 25 times, the limit before max sentence
+        let want = "the the the the the the the the the the the the the the the the the the the the the the the the the".to_string();
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn probability_of_sentence_bigram_valid() {
         let mut bmodel = NGramModel::new(2);
 
