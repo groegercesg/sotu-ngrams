@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["biden_sotu_2022.txt"],
+            "args": ["biden_sotu_2024.txt"],
             "cwd": "${workspaceFolder}"
         },
     ]

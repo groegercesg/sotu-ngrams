@@ -28,6 +28,8 @@ impl NGramModel {
         }
     }
 
+    // TODO: Method for loading and saving (to disk) relevant data structures?
+
     fn get_last_given_penultimate_count(
         &mut self,
         pen_gram: Vec<String>,
@@ -218,6 +220,64 @@ impl NGramModel {
     // TODO: generate_text
     //       method: most frequent (greedy)
     //               probabilistic, random sampling, the biased dice thing
+    pub fn generate_text(
+        &mut self,
+        // number_of_sentences: i32
+    ) -> String {
+        // This will be greedy_based
+        let mut history: Vec<String> = vec![];
+        // Initialise history as (degree - 1) start tokens
+        for _i in 0..(self.degree - 1).try_into().unwrap() {
+            history.push(self.start_of_sentence.to_string());
+        }
+
+        let mut generated_grams_storage: Vec<String> = vec![];
+
+        let mut generated_gram: String = "".to_string();
+        while generated_gram != self.end_of_sentence {
+            // Keep generating grams based on the history
+            generated_gram = self.get_most_frequent_gram(&history);
+            
+            // Remove and rotate history
+            history.remove(0);
+            history.push(generated_gram.clone().to_string());
+
+            // Track the generated_gram
+            generated_grams_storage.push(generated_gram.clone().to_string())
+        }
+
+        return generated_grams_storage[0..generated_grams_storage.len() - 1].join(" ");
+    }
+
+    fn get_most_frequent_gram (
+        &mut self,
+        history: &Vec<String>
+    ) -> String {
+        let history_size = history.len();
+        assert!(history_size == (self.degree - 1).try_into().unwrap());
+
+        // Filter ngram_counts for the keys, sliced to partial_size, equal to partial_gram
+        // Get the maximum value, extract the last string from it
+        // let most_frequent_ngram = self.ngram_counts
+        //     .iter()
+        //     .filter(|a|
+        //             a.0.to_vec()[0..history_size] == history.to_vec())
+        //     .max_by(|a, b| a.1.cmp(&b.1))
+        //     .ok_or("Couldn't find a bigram").unwrap().0;
+
+        let suitable_ngrams: HashMap<_, _> = self.ngram_counts
+            .iter()
+            .filter(|a|
+                    a.0.to_vec()[0..history_size] == history.to_vec())
+            .collect();
+
+        let most_frequent_ngram = suitable_ngrams
+            .iter()
+            .max_by(|a, b| a.1.cmp(&b.1))
+            .ok_or("Couldn't find a bigram").unwrap().0;
+
+        return most_frequent_ngram.to_vec().last().unwrap().to_string();
+    }
 
     pub fn update_ngram_model(
         &mut self,
