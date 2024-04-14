@@ -12,7 +12,7 @@ fn main() {
     let file_path = &args[1];
 
     // Create an instance of the NGramModel
-    let mut ngmodel = NGramModel::new(3);
+    let mut ngmodel = NGramModel::new(4);
 
     // File text_sample.txt must exist in the current path
     if let Ok(lines) = read_lines(file_path) {

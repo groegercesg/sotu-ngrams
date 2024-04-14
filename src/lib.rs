@@ -216,10 +216,11 @@ impl NGramModel {
         return cleaned_text.split_whitespace().map(str::to_string).collect();
     }
 
+    // generate_text
+    //       method: 
+    //               TODO: probabilistic, random sampling, the biased dice thing
+    //                     what data structure works for this
 
-    // TODO: generate_text
-    //       method: most frequent (greedy)
-    //               probabilistic, random sampling, the biased dice thing
     pub fn generate_text(
         &mut self,
         // number_of_sentences: i32
@@ -255,15 +256,6 @@ impl NGramModel {
     ) -> String {
         let history_size = history.len();
         assert!(history_size == (self.degree - 1).try_into().unwrap());
-
-        // Filter ngram_counts for the keys, sliced to partial_size, equal to partial_gram
-        // Get the maximum value, extract the last string from it
-        // let most_frequent_ngram = self.ngram_counts
-        //     .iter()
-        //     .filter(|a|
-        //             a.0.to_vec()[0..history_size] == history.to_vec())
-        //     .max_by(|a, b| a.1.cmp(&b.1))
-        //     .ok_or("Couldn't find a bigram").unwrap().0;
 
         let suitable_ngrams: HashMap<_, _> = self.ngram_counts
             .iter()
