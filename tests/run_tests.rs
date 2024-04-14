@@ -23,7 +23,6 @@ mod tests {
         let line_of_text = "This year again we are finally together again we".to_string();
         bmodel.update_ngram_model(line_of_text);
 
-        // TODO: Check with Emily if this makes sense
         let test_sentence = "This year again we are not happy".to_string();
         let got = bmodel.probability_of_sentence(test_sentence);
         let want = 0.0;
@@ -37,7 +36,6 @@ mod tests {
         let line_of_text = "This year again we are finally together again we".to_string();
         bmodel.update_ngram_model(line_of_text);
 
-        // TODO: Check with Emily if this makes sense
         let test_sentence = "This is a sentence we want to test".to_string();
         let got = bmodel.probability_of_sentence(test_sentence);
         let want = 0.0;

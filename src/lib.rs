@@ -120,7 +120,7 @@ impl NGramModel {
         }
     }
 
-    // TODO: Sum log probs, in and out - where should I use log probs - everywhere?
+    // TODO: Look into smoothing - 'backoff' 'interpolation' 'laplace smoothing' 
 
     pub fn probability_of_sentence(
         &mut self,
@@ -143,6 +143,7 @@ impl NGramModel {
             return self.calculate_ngram_probability(&words)
         } else {
             // words.len() > self.degree
+            // Sum log probabilities at this stage, so as to not incur small floating point number errors
 
             // Populate a vector of all the probabilities
             let mut probabilities: Vec<f64> = vec![];
@@ -150,10 +151,11 @@ impl NGramModel {
                 // Do the first part of the calculation
                 for i in 1..self.degree {
                     let current_size = i.try_into().unwrap();
+                    // Store log2 of probability
                     probabilities.push(
                         self.probability_for_partial_ngram(
                             &words[0..current_size].to_vec()
-                        )
+                        ).log2()
                     );
                 }
             } 
@@ -161,14 +163,15 @@ impl NGramModel {
             // We need to skip the first section
             let words_start_point = (self.degree - 1).try_into().unwrap();
             for grams in words[words_start_point..].windows(self.degree.try_into().unwrap()) {
-                probabilities.push(self.calculate_ngram_probability(&grams.to_vec()))
+                // Store log2 of probability
+                probabilities.push(self.calculate_ngram_probability(&grams.to_vec()).log2())
             }
 
-            return probabilities
+            // Sum log probs, then exponent to retrieve the underlying number
+            let sum_of_log_probs: f64 = probabilities
                 .iter()
-                .copied()
-                .reduce(|a, b| a * b)
-                .unwrap();
+                .sum();
+            return sum_of_log_probs.exp2();
         }
     }
 
