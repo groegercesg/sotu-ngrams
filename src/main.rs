@@ -12,7 +12,7 @@ fn main() {
     let file_path = &args[1];
 
     // Create an instance of the NGramModel
-    let mut ngmodel = NGramModel::new(4);
+    let mut ngmodel = NGramModel::new(3);
 
     // File text_sample.txt must exist in the current path
     if let Ok(lines) = read_lines(file_path) {
@@ -36,7 +36,13 @@ fn main() {
     let most_common_probability = ngmodel.calculate_ngram_probability(&most_common_ngram);
     println!("The ngram probability was: {:.3}.",
         most_common_probability
-    )
+    );
+
+    // Generate some text
+    let generated_sentence = ngmodel.generate_text();
+    println!("I generated some text for you, it was: {:?}.",
+        generated_sentence
+    );
 }
 
 
