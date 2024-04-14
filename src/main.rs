@@ -39,7 +39,7 @@ fn main() {
     );
 
     // Generate some text
-    let generated_sentence = ngmodel.generate_text();
+    let generated_sentence = ngmodel.generate_text(1).first().unwrap().to_string();
     println!("I generated some text for you, it was: {:?}.",
         generated_sentence
     );

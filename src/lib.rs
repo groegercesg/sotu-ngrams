@@ -223,8 +223,22 @@ impl NGramModel {
 
     pub fn generate_text(
         &mut self,
+        number_of_sentences: i32
+    ) -> Vec<String> {
+        let mut generated_sentences: Vec<String> = vec![];
+        for _i in 0..number_of_sentences {
+            generated_sentences.push(
+                self.generate_text_individual_sentence()
+            )
+        }
+        return generated_sentences;
+    }
+
+    fn generate_text_individual_sentence(
+        &mut self,
         // number_of_sentences: i32
     ) -> String {
+        let max_sentence_size = 25;
         // This will be greedy_based
         let mut history: Vec<String> = vec![];
         // Initialise history as (degree - 1) start tokens
@@ -235,19 +249,26 @@ impl NGramModel {
         let mut generated_grams_storage: Vec<String> = vec![];
 
         let mut generated_gram: String = "".to_string();
-        while generated_gram != self.end_of_sentence {
+        while generated_gram != self.end_of_sentence &&
+            generated_grams_storage.len() < max_sentence_size {
             // Keep generating grams based on the history
             generated_gram = self.get_most_frequent_gram(&history);
             
-            // Remove and rotate history
-            history.remove(0);
-            history.push(generated_gram.clone().to_string());
+            // Remove and rotate history, only if history is large enough
+            if self.degree > 1 {
+                history.remove(0);
+                history.push(generated_gram.clone().to_string());
+            }
 
             // Track the generated_gram
             generated_grams_storage.push(generated_gram.clone().to_string())
         }
 
-        return generated_grams_storage[0..generated_grams_storage.len() - 1].join(" ");
+        if generated_grams_storage.last().unwrap().to_string() == self.end_of_sentence {
+            return generated_grams_storage[0..generated_grams_storage.len() - 1].join(" ");
+        } else {
+            return generated_grams_storage.join(" ");
+        }
     }
 
     fn get_most_frequent_gram (
@@ -257,14 +278,19 @@ impl NGramModel {
         let history_size = history.len();
         assert!(history_size == (self.degree - 1).try_into().unwrap());
 
-        let suitable_ngrams: HashMap<_, _> = self.ngram_counts
-            .iter()
-            .filter(|a|
+        let suitable_ngrams: HashMap<Vec<String>, i64>;
+        if history_size == 0 {
+            suitable_ngrams = self.ngram_counts.clone();
+        } else {
+            suitable_ngrams = self.ngram_counts.clone()
+                .into_iter()
+                .filter(|a|
                     a.0.to_vec()[0..history_size] == history.to_vec())
-            .collect();
-
+                .collect::<HashMap<Vec<String>, i64>>();
+        }
+        
         // Calculate maximum value
-        let max_value = **suitable_ngrams
+        let max_value = suitable_ngrams
             .iter()
             .max_by(|a, b| a.1.cmp(&b.1))
             .map(|(_k, v)| v)
@@ -275,7 +301,7 @@ impl NGramModel {
         let mut maximum_ngrams: Vec<String> = suitable_ngrams
             .iter()
             .filter(|a|
-                **a.1 == max_value)
+                a.1 == max_value)
             .map(|(k , _v)| k.last().unwrap().to_string())
             .collect();
 
