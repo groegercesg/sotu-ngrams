@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+use rand::Rng;
 
 pub struct NGramModel {
     pub last_given_penultimate_counts: HashMap<Vec<String>, HashMap<String, i64>>,
@@ -252,7 +253,7 @@ impl NGramModel {
         while generated_gram != self.end_of_sentence &&
             generated_grams_storage.len() < max_sentence_size {
             // Keep generating grams based on the history
-            generated_gram = self.get_most_frequent_gram(&history);
+            generated_gram = self.get_most_frequent_gram_prob(&history);
             
             // Remove and rotate history, only if history is large enough
             if self.degree > 1 {
@@ -269,6 +270,50 @@ impl NGramModel {
         } else {
             return generated_grams_storage.join(" ");
         }
+    }
+
+    fn get_most_frequent_gram_prob (
+        &mut self,
+        history: &Vec<String>
+    ) -> String {
+        // probabilistic, random sampling, the biased dice thing
+        let history_size = history.len();
+        assert!(history_size == (self.degree - 1).try_into().unwrap());
+
+        let suitable_ngrams: HashMap<Vec<String>, i64>;
+        if history_size == 0 {
+            suitable_ngrams = self.ngram_counts.clone();
+        } else {
+            suitable_ngrams = self.ngram_counts.clone()
+                .into_iter()
+                .filter(|a|
+                    a.0.to_vec()[0..history_size] == history.to_vec())
+                .collect::<HashMap<Vec<String>, i64>>();
+        }
+
+        // Random value - to find
+        let mut rng = rand::thread_rng();
+        let rand_value = rng.gen::<f64>();
+
+        // TODO: This is 1.0000000000000013 - is this okay?
+        // Sum of suitable ngrams - should be 1
+        let sum_value: f64 = suitable_ngrams
+            .iter()
+            .map(|f| self.calculate_ngram_probability(f.0))
+            .sum();
+
+        let mut accumulated_prob: f64 = 0.0;
+
+        for target_gram in suitable_ngrams {
+            accumulated_prob += self.calculate_ngram_probability(&target_gram.0);
+            if accumulated_prob >= rand_value {
+                return target_gram.0.last().unwrap().to_string();
+            }
+        }
+
+        // TODO - We should never get here
+        // Return the first from the keys
+        return "".to_string();
     }
 
     fn get_most_frequent_gram (
