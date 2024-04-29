@@ -123,7 +123,7 @@ impl NGramModel {
         }
     }
 
-    // TODO: Look into smoothing - 'backoff' 'interpolation' 'laplace smoothing' 
+    // TODO: Look into smoothing - 'backoff', 'interpolation', 'laplace smoothing' 
 
     pub fn probability_of_sentence(
         &mut self,
@@ -217,19 +217,19 @@ impl NGramModel {
         return cleaned_text.split_whitespace().map(str::to_string).collect();
     }
 
-    // generate_text
-    //       method: 
-    //               TODO: probabilistic, random sampling, the biased dice thing
-    //                     what data structure works for this
-
     pub fn generate_text(
         &mut self,
+        generate_mode: String,
         number_of_sentences: i32
     ) -> Vec<String> {
+        if !["Probabilistic", "Greedy"].contains(&&*generate_mode) {
+            panic!("Unrecognised generate_mode supplied: {:?}", generate_mode);
+        }
+
         let mut generated_sentences: Vec<String> = vec![];
         for _i in 0..number_of_sentences {
             generated_sentences.push(
-                self.generate_text_individual_sentence()
+                self.generate_text_individual_sentence(&generate_mode)
             )
         }
         return generated_sentences;
@@ -237,7 +237,7 @@ impl NGramModel {
 
     fn generate_text_individual_sentence(
         &mut self,
-        // number_of_sentences: i32
+        generate_mode: &String
     ) -> String {
         let max_sentence_size = 25;
         // This will be greedy_based
@@ -253,7 +253,13 @@ impl NGramModel {
         while generated_gram != self.end_of_sentence &&
             generated_grams_storage.len() < max_sentence_size {
             // Keep generating grams based on the history
-            generated_gram = self.get_most_frequent_gram_prob(&history);
+            if generate_mode == "Probabilistic" {
+                generated_gram = self.get_most_frequent_gram_prob(&history);
+            } else if generate_mode == "Greedy" {
+                generated_gram = self.get_most_frequent_gram(&history);
+            } else {
+                panic!("Unrecognised generate_mode supplied: {:?}", generate_mode);
+            }
             
             // Remove and rotate history, only if history is large enough
             if self.degree > 1 {
@@ -297,10 +303,10 @@ impl NGramModel {
 
         // TODO: This is 1.0000000000000013 - is this okay?
         // Sum of suitable ngrams - should be 1
-        let sum_value: f64 = suitable_ngrams
-            .iter()
-            .map(|f| self.calculate_ngram_probability(f.0))
-            .sum();
+        // let sum_value: f64 = suitable_ngrams
+        //     .iter()
+        //     .map(|f| self.calculate_ngram_probability(f.0))
+        //     .sum();
 
         let mut accumulated_prob: f64 = 0.0;
 
@@ -311,7 +317,7 @@ impl NGramModel {
             }
         }
 
-        // TODO - We should never get here
+        // We should never get here
         // Return the first from the keys
         return "".to_string();
     }
