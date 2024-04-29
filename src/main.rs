@@ -11,8 +11,9 @@ fn main() {
     }
 
     let file_paths = [
-        "biden_sotu_2022.txt",
-        "biden_sotu_2024.txt"
+        "text_samples/shakespeare_alllines.txt",
+        "text_samples/biden_sotu_2024.txt",
+        "text_samples/biden_sotu_2022.txt",
     ];
 
     // Create an instance of the NGramModel
@@ -33,16 +34,18 @@ fn main() {
     let most_common_ngram_result = ngmodel.most_common_ngram_without_sentence_tokens();
     
     assert!(most_common_ngram_result.is_ok());
-    println!("Most Frequent ngram was: {:?}. It occurred {:?} times.", 
+    println!("The most frequent ngram was: {:?}. It occurred {:?} times.", 
         most_common_ngram_result.unwrap().0,
         most_common_ngram_result.unwrap().1
     );
 
-    // Generate some text
-    let generated_sentence = ngmodel.generate_text("Probabilistic".to_string(), 1).first().unwrap().to_string();
-    println!("I generated some text for you, it was: {:?}.",
-        generated_sentence
-    );
+    // Generate 10 sample sentences
+    println!("I generated some sample sentences for you:");
+    for generated_sentence in ngmodel.generate_text("Probabilistic".to_string(), 10) {
+        println!("\t{:?}.",
+            generated_sentence
+        );
+    }
 }
 
 
