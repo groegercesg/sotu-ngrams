@@ -16,7 +16,7 @@ mod tests {
             }
         }
 
-        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        let got = bmodel.generate_text("Greedy".to_string(), 1).first().unwrap().to_string();
         
         let want = "I see a future where we all come from somewhere but we are".to_string();
         assert_eq!(got, want);
@@ -36,7 +36,7 @@ mod tests {
             }
         }
 
-        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        let got = bmodel.generate_text("Greedy".to_string(), 1).first().unwrap().to_string();
         
         let want = "And we will as one people".to_string();
         assert_eq!(got, want);
@@ -56,7 +56,7 @@ mod tests {
             }
         }
 
-        let got = bmodel.generate_text(1).first().unwrap().to_string();
+        let got = bmodel.generate_text("Greedy".to_string(), 1).first().unwrap().to_string();
         
         // This will be the most probable word 25 times, the limit before max sentence
         let want = "the the the the the the the the the the the the the the the the the the the the the the the the the".to_string();
