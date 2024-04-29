@@ -1,6 +1,8 @@
 # Grams
 
-## Samples
+## Text Samples
+
+`shakespeare_alllines.txt`: [Shakespeare Plays](https://www.kaggle.com/datasets/kingburrito666/shakespeare-plays?select=alllines.txt)
 
 `biden_sotu_2024.txt`: [Joe Biden State of the Union, 2024](https://www.whitehouse.gov/briefing-room/speeches-remarks/2024/03/07/remarks-of-president-joe-biden-state-of-the-union-address-as-prepared-for-delivery-2/)
 
