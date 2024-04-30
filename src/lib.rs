@@ -335,36 +335,32 @@ impl NGramModel {
         let history_size = history.len();
         assert!(history_size == (self.degree - 1).try_into().unwrap());
 
-        let suitable_ngrams: HashMap<Vec<String>, i64>;
-        if history_size == 0 {
-            suitable_ngrams = self.ngram_counts.clone();
-        } else {
-            suitable_ngrams = self.ngram_counts.clone()
-                .into_iter()
-                .filter(|a|
-                    a.0.to_vec()[0..history_size] == history.to_vec())
-                .collect::<HashMap<Vec<String>, i64>>();
+        let mut tracking_max = -1;
+        let mut maximum_end_ngrams: Vec<String> = vec![];
+
+        // Iterate once through ngram_counts to populate maximum_end_ngrams
+        for (gram, k) in &self.ngram_counts {
+            // Shortcircuit for history equals 0
+            if history_size == 0 || gram.to_vec()[0..history_size] == history.to_vec() {
+                // Check if k is at tracking max
+                if k < &tracking_max {
+                    // Do nothing
+                    {}
+                } else if *k == tracking_max {
+                    // Add to maximum_end_ngrams
+                    maximum_end_ngrams.push(gram.last().unwrap().to_string())
+                } else {
+                    // k > tracking_max
+                    tracking_max = *k;
+                    maximum_end_ngrams.clear();
+                    maximum_end_ngrams.push(gram.last().unwrap().to_string())
+                }
+            }
         }
         
-        // Calculate maximum value
-        let max_value = suitable_ngrams
-            .iter()
-            .max_by(|a, b| a.1.cmp(&b.1))
-            .map(|(_k, v)| v)
-            .ok_or("Couldn't find a bigram").unwrap();
-
-        // The conditions here aren't enough to give deterministic output, what if they have 
-        // the same count but different contents, we should sort as well
-        let mut maximum_ngrams: Vec<String> = suitable_ngrams
-            .iter()
-            .filter(|a|
-                a.1 == max_value)
-            .map(|(k , _v)| k.last().unwrap().to_string())
-            .collect();
-
         // Sort alphabetically
-        maximum_ngrams.sort();
-        let most_frequent_gram: String = maximum_ngrams.first().unwrap().to_string();
+        maximum_end_ngrams.sort();
+        let most_frequent_gram: String = maximum_end_ngrams.first().unwrap().to_string();
 
         return most_frequent_gram;
     }
