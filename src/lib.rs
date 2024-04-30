@@ -32,11 +32,11 @@ impl NGramModel {
     // TODO: Method for loading and saving (to disk) relevant data structures?
 
     fn get_last_given_penultimate_count(
-        &mut self,
+        last_given_penultimate_counts: &HashMap<Vec<String>, HashMap<String, i64>>,
         pen_gram: Vec<String>,
         last: String
     ) -> i64 {
-        match self.last_given_penultimate_counts.get(&pen_gram) {
+        match last_given_penultimate_counts.get(&pen_gram) {
             Some(pen_gram_map) => { 
                 match pen_gram_map.get(&last) {
                     Some(count) => { return *count; }
@@ -48,10 +48,10 @@ impl NGramModel {
     }
 
     fn get_penultimate_count(
-        &mut self,
+        penultimate_gram_counts: &HashMap<Vec<String>, i64>,
         pen_gram: Vec<String>
     ) -> i64 {
-        match self.penultimate_gram_counts.get(&pen_gram) {
+        match penultimate_gram_counts.get(&pen_gram) {
             Some(count) => { return *count; }
             None => { return 0; }
         }
@@ -100,7 +100,8 @@ impl NGramModel {
     }
 
     pub fn calculate_ngram_probability(
-        &mut self,
+        penultimate_gram_counts: &HashMap<Vec<String>, i64>,
+        last_given_penultimate_counts: &HashMap<Vec<String>, HashMap<String, i64>>,
         ngram: &Vec<String>
     ) -> f64 {
         // To Calculate:
@@ -109,8 +110,8 @@ impl NGramModel {
         // For n_gram[0:len-1] grams, we need to count how many times these occur (the denominator)
         // Then we need to store, for each n_gram[0:len-1], how many times each n_gram[len] occurs (numberator)
         if let Some((last, penultimate_gram)) = ngram.split_last() {
-            let last_given_penultimate_count = self.get_last_given_penultimate_count(penultimate_gram.to_vec(), last.to_string());
-            let penultimate_gram_count = self.get_penultimate_count(penultimate_gram.to_vec());
+            let last_given_penultimate_count = NGramModel::get_last_given_penultimate_count(last_given_penultimate_counts, penultimate_gram.to_vec(), last.to_string());
+            let penultimate_gram_count = NGramModel::get_penultimate_count(penultimate_gram_counts, penultimate_gram.to_vec());
             
             if penultimate_gram_count.eq(&0) {
                 // Catch a divide by zero to stop it returning NaN
@@ -143,7 +144,11 @@ impl NGramModel {
         if words.len() < self.degree.try_into().unwrap() {
             return self.probability_for_partial_ngram(&words);
         } else if words.len() == self.degree.try_into().unwrap() {
-            return self.calculate_ngram_probability(&words)
+            return NGramModel::calculate_ngram_probability(
+                &self.penultimate_gram_counts,
+                &self.last_given_penultimate_counts,
+                &words
+            );
         } else {
             // words.len() > self.degree
             // Sum log probabilities at this stage, so as to not incur small floating point number errors
@@ -167,7 +172,13 @@ impl NGramModel {
             let words_start_point = (self.degree - 1).try_into().unwrap();
             for grams in words[words_start_point..].windows(self.degree.try_into().unwrap()) {
                 // Store log2 of probability
-                probabilities.push(self.calculate_ngram_probability(&grams.to_vec()).log2())
+                probabilities.push(
+                    NGramModel::calculate_ngram_probability(
+                        &self.penultimate_gram_counts,
+                        &self.last_given_penultimate_counts,
+                        &grams.to_vec()
+                    ).log2()
+                );
             }
 
             // Sum log probs, then exponent to retrieve the underlying number
@@ -286,20 +297,24 @@ impl NGramModel {
         let history_size = history.len();
         assert!(history_size == (self.degree - 1).try_into().unwrap());
 
-        let suitable_ngrams: HashMap<Vec<String>, i64>;
-        if history_size == 0 {
-            suitable_ngrams = self.ngram_counts.clone();
-        } else {
-            suitable_ngrams = self.ngram_counts.clone()
-                .into_iter()
-                .filter(|a|
-                    a.0.to_vec()[0..history_size] == history.to_vec())
-                .collect::<HashMap<Vec<String>, i64>>();
-        }
-
-        // Random value - to find
         let mut rng = rand::thread_rng();
         let rand_value = rng.gen::<f64>();
+
+        let mut accumulated_prob: f64 = 0.0;
+
+        for (gram, _k) in &self.ngram_counts {
+            // Shortcircuit for history equals 0
+            if history_size == 0 || gram.to_vec()[0..history_size] == history.to_vec() {
+                accumulated_prob += NGramModel::calculate_ngram_probability(
+                    &self.penultimate_gram_counts,
+                    &self.last_given_penultimate_counts,
+                    &gram
+                );
+                if accumulated_prob >= rand_value {
+                    return gram.last().unwrap().to_string();
+                }
+            }
+        }
 
         // TODO: This is 1.0000000000000013 - is this okay?
         // Sum of suitable ngrams - should be 1
@@ -307,15 +322,6 @@ impl NGramModel {
         //     .iter()
         //     .map(|f| self.calculate_ngram_probability(f.0))
         //     .sum();
-
-        let mut accumulated_prob: f64 = 0.0;
-
-        for target_gram in suitable_ngrams {
-            accumulated_prob += self.calculate_ngram_probability(&target_gram.0);
-            if accumulated_prob >= rand_value {
-                return target_gram.0.last().unwrap().to_string();
-            }
-        }
 
         // We should never get here
         // Return the first from the keys
