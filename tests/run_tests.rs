@@ -7,7 +7,7 @@ mod tests {
         let mut bmodel = NGramModel::new(3);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2024.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2024.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -27,7 +27,7 @@ mod tests {
         let mut bmodel = NGramModel::new(4);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -47,7 +47,7 @@ mod tests {
         let mut bmodel = NGramModel::new(1);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -359,7 +359,11 @@ mod tests {
 
         // Probability P("we" | "again") = 0.5
         let sample_bigram = vec!["again".to_string(), "we".to_string()];
-        let got = bmodel.calculate_ngram_probability(&sample_bigram);
+        let got = NGramModel::calculate_ngram_probability(
+            &bmodel.penultimate_gram_counts,
+            &bmodel.last_given_penultimate_counts,
+            &sample_bigram
+        );
         let want = 1 as f64 / 2 as f64;
         assert_eq!(got, want);
     }
@@ -373,7 +377,11 @@ mod tests {
 
         // Probability P("monkey" | "dogs") = 0
         let sample_bigram = vec!["dogs".to_string(), "monkey".to_string()];
-        let got = bmodel.calculate_ngram_probability(&sample_bigram);
+        let got = NGramModel::calculate_ngram_probability(
+            &bmodel.penultimate_gram_counts,
+            &bmodel.last_given_penultimate_counts,
+            &sample_bigram
+        );
         let want = 0 as f64;
         assert_eq!(got, want);
     }
@@ -387,7 +395,11 @@ mod tests {
 
         // Probability P("cake" | "mango") = 1 / 4
         let sample_bigram = vec!["mango".to_string(), "cake".to_string()];
-        let got = bmodel.calculate_ngram_probability(&sample_bigram);
+        let got = NGramModel::calculate_ngram_probability(
+            &bmodel.penultimate_gram_counts,
+            &bmodel.last_given_penultimate_counts,
+            &sample_bigram
+        );
         let want = 1 as f64 / 4 as f64;
         assert_eq!(got, want);
     }
@@ -413,7 +425,7 @@ mod tests {
         let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -436,7 +448,7 @@ mod tests {
         let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -459,7 +471,7 @@ mod tests {
         let mut bmodel = NGramModel::new(2);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -470,7 +482,11 @@ mod tests {
 
         let test_tuple = vec!["keep".to_string(), "moving".to_string()];
         
-        let got = bmodel.calculate_ngram_probability(&test_tuple);
+        let got = NGramModel::calculate_ngram_probability(
+            &bmodel.penultimate_gram_counts,
+            &bmodel.last_given_penultimate_counts,
+            &test_tuple
+        );
         let want = 0.15384615384615385;
 
         assert_eq!(got, want);
@@ -481,7 +497,7 @@ mod tests {
         let mut bmodel = NGramModel::new(3);
 
         // File text_sample.txt must exist in the current path
-        if let Ok(lines) = read_lines("./biden_sotu_2022.txt") {
+        if let Ok(lines) = read_lines("text_samples/biden_sotu_2022.txt") {
             // Use lines from the iterator
             for line in lines.flatten() {
                 if !line.is_empty() {
@@ -492,7 +508,11 @@ mod tests {
 
         let test_tuple = vec!["the".to_string(), "United".to_string(), "States".to_string()];
         
-        let got = bmodel.calculate_ngram_probability(&test_tuple);
+        let got = NGramModel::calculate_ngram_probability(
+            &bmodel.penultimate_gram_counts,
+            &bmodel.last_given_penultimate_counts,
+            &test_tuple
+        );
         let want = 0.8571428571428571;
 
         assert_eq!(got, want);
