@@ -43,33 +43,45 @@ fn main() {
 
     sotu_links.sort_unstable();
     sotu_links.dedup();
-    println!("{:?}",  sotu_links.len());
+    let total_links = sotu_links.len();
+    println!("{:?}", total_links);
     // for link in sotu_links {
     //     println!("{link}")
     // }
 
+    // Create an instance of the NGramModel
+    let mut ngmodel = NGramModel::new(4);
 
-    let p_selector = Selector::parse("p").unwrap();
     let selector = Selector::parse(r#"div[class="field-docs-content"]"#).unwrap();
 
-    let sotu_text = get_text(sotu_links.get(0).unwrap());
-    match sotu_text {
-        Ok(content) => {
-            let fragment = Html::parse_fragment(&content);
-            let ul = fragment.select(&selector).next().unwrap();
-            let text = ul.child_elements().flat_map(|el| el.text()).collect::<Vec<_>>();
-            // for element in ul.select(&p_selector) {
-            //     println!("{:?}", element.childtext())
-            // }
-            println!("A")
+
+    for (pos, sotu_link) in sotu_links.iter().enumerate() {
+        let sotu_text = get_text(&sotu_link);
+        println!("{:?}/{total_links} -- Doing: {sotu_link}", pos+1);
+        match sotu_text {
+            Ok(content) => {
+                let fragment = Html::parse_fragment(&content);
+                let ul = fragment.select(&selector).next().unwrap();
+                let text_lines = ul.child_elements().flat_map(|el| el.text()).collect::<Vec<_>>();
+                
+                // Got the content and loading it into the model
+
+                // TODO - Split on fullstop
+
+                for line in text_lines {
+                    if !line.is_empty() {
+                        ngmodel.update_ngram_model(line.to_string());
+                    }
+                }
+            }
+            Err(e) => panic!("Failed to get text: {e:?}")
         }
-        Err(e) => panic!("Failed to get text: {e:?}")
     }
+    
     
 
 
-    // // Create an instance of the NGramModel
-    // let mut ngmodel = NGramModel::new(4);
+    
 
     // // Learn the model with these files
     // for file_path in file_paths {
@@ -83,21 +95,21 @@ fn main() {
     //     }
     // };
 
-    // let most_common_ngram_result = ngmodel.most_common_ngram_without_sentence_tokens();
+    let most_common_ngram_result = ngmodel.most_common_ngram_without_sentence_tokens();
     
-    // assert!(most_common_ngram_result.is_ok());
-    // println!("The most frequent ngram was: {:?}. It occurred {:?} times.", 
-    //     most_common_ngram_result.unwrap().0,
-    //     most_common_ngram_result.unwrap().1
-    // );
+    assert!(most_common_ngram_result.is_ok());
+    println!("The most frequent ngram was: {:?}. It occurred {:?} times.", 
+        most_common_ngram_result.unwrap().0,
+        most_common_ngram_result.unwrap().1
+    );
 
-    // // Generate 10 sample sentences
-    // println!("I generated some sample sentences for you:");
-    // for generated_sentence in ngmodel.generate_text("Probabilistic".to_string(), 10) {
-    //     println!("\t{:?}.",
-    //         generated_sentence
-    //     );
-    // }
+    // Generate 10 sample sentences
+    println!("I generated some sample sentences for you:");
+    for generated_sentence in ngmodel.generate_text("Probabilistic".to_string(), 10) {
+        println!("\t{:?}.",
+            generated_sentence
+        );
+    }
     
 }
 
