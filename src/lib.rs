@@ -4,6 +4,11 @@ use std::io::{self, BufRead};
 use std::path::Path;
 use rand::Rng;
 
+use select::document::Document;
+use select::predicate::Name;
+use scraper::{Html, Selector};
+use reqwest;
+
 pub struct NGramModel {
     pub last_given_penultimate_counts: HashMap<Vec<String>, HashMap<String, i64>>,
     pub penultimate_gram_counts: HashMap<Vec<String>, i64>,
@@ -425,4 +430,96 @@ pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
     let file = File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
+}
+
+pub struct SOTUScraper {
+    text_lines: Vec<String>
+}
+
+impl SOTUScraper {
+    pub fn gather_text() -> SOTUScraper {
+        // Goal: gather lines of text from 
+        let mut sotu_lines: Vec<String> = vec![];
+
+        let directory_url = "https://www.presidency.ucsb.edu/documents/presidential-documents-archive-guidebook/annual-messages-congress-the-state-the-union";
+        let text = SOTUScraper::get_text_from_url(directory_url);
+
+        println!("Downloading SOTU links from UCSB.");
+
+        let mut sotu_links: Vec<String> = vec![];
+
+        match text {
+            Ok(content) => {
+                // Find start of tables
+                let mut table_contents: Vec<String> = vec![];
+                
+                Document::from(content.as_str())
+                    .find(Name("table"))
+                    .for_each(|x| table_contents.push(x.html()));
+
+                for individual_table in table_contents {
+                    Document::from(individual_table.as_str())
+                        .find(Name("a"))
+                        .filter_map(|n| n.attr("href"))
+                        .filter(|a| a.contains("https://www.presidency.ucsb.edu/documents/"))
+                        .for_each(|x| sotu_links.push(x.to_string()));
+                }
+            }
+            Err(e) => panic!("Failed to get text: {e:?}")
+        }
+
+        sotu_links.sort_unstable();
+        sotu_links.dedup();
+        let total_links = sotu_links.len();
+        println!("We have gathered {:?} SOTU links.", total_links);
+
+        // Build selector for SOTU content
+        let selector = Selector::parse(r#"div[class="field-docs-content"]"#).unwrap();
+
+        for (pos, sotu_link) in sotu_links.iter().enumerate() {
+            println!("{:?}/{total_links} -- Downloading: '{sotu_link}'", pos+1);
+            let sotu_text = SOTUScraper::get_text_from_url(&sotu_link);
+            match sotu_text {
+                Ok(content) => {
+                    let fragment = Html::parse_fragment(&content);
+                    let ul = fragment.select(&selector).next().unwrap();
+                    let text_lines = ul.child_elements().flat_map(|el| el.text()).collect::<Vec<_>>();
+                    
+                    // Got the content and loading it into the model
+                    for line in text_lines {
+                        for part_line in line.split(".") {
+                            if !part_line.is_empty() {
+                                sotu_lines.push(part_line.to_string());
+                            }
+                        }
+                    }
+                }
+                Err(e) => panic!("Failed to get text: {e:?}")
+            }
+        }
+        
+        return SOTUScraper {text_lines: sotu_lines}
+    }
+
+    fn get_text_from_url(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let http_client = reqwest::blocking::Client::new();
+        
+        let response = http_client
+            // form a get request with get(url)
+            .get(url)
+            // send the request and get Response or else return the error
+            .send()?
+            // get text from response or else return the error
+            .text()?;
+
+        // wrapped response in Result
+        Ok(response)
+    }
+
+    pub fn get_line_iterator(
+        &mut self
+    ) -> std::slice::Iter<'_, String> {
+        return self.text_lines.iter();
+    }
+
 }
