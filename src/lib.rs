@@ -31,6 +31,8 @@ impl NGramModel {
 
     // TODO: Method for loading and saving (to disk) relevant data structures?
 
+    // TODO: Calculate perplexity?
+
     fn get_last_given_penultimate_count(
         last_given_penultimate_counts: &HashMap<Vec<String>, HashMap<String, i64>>,
         pen_gram: Vec<String>,

@@ -2,7 +2,6 @@ use std::env;
 use std::vec;
 
 use grams::NGramModel;
-use grams::read_lines;
 
 use select::document::Document;
 use select::predicate::Name;
@@ -16,48 +15,47 @@ fn main() {
         panic!("Not enough program arguments supplied, you supplied: {:?}", args);
     }
 
-    let file_paths = [
-        "text_samples/shakespeare_alllines.txt",
-        "text_samples/biden_sotu_2024.txt",
-        "text_samples/biden_sotu_2022.txt",
-    ];
-
     let directory_url = "https://www.presidency.ucsb.edu/documents/presidential-documents-archive-guidebook/annual-messages-congress-the-state-the-union";
     let text = get_text(directory_url);
 
-    println!("Parsing for links");
+    println!("Downloading SOTU links from UCSB.");
 
     let mut sotu_links: Vec<String> = vec![];
 
     match text {
         Ok(content) => {
+            // Find start of tables
+            let mut table_contents: Vec<String> = vec![];
+            
             Document::from(content.as_str())
-                .find(Name("a"))
-                .filter_map(|n| n.attr("href"))
-                .filter(|a| a.contains("https://www.presidency.ucsb.edu/documents/"))
-                .for_each(|x| sotu_links.push(x.to_string()));
+                .find(Name("table"))
+                .for_each(|x| table_contents.push(x.html()));
+
+            for individual_table in table_contents {
+                Document::from(individual_table.as_str())
+                    .find(Name("a"))
+                    .filter_map(|n| n.attr("href"))
+                    .filter(|a| a.contains("https://www.presidency.ucsb.edu/documents/"))
+                    .for_each(|x| sotu_links.push(x.to_string()));
+            }
         }
         Err(e) => panic!("Failed to get text: {e:?}")
     }
 
-
     sotu_links.sort_unstable();
     sotu_links.dedup();
     let total_links = sotu_links.len();
-    println!("{:?}", total_links);
-    // for link in sotu_links {
-    //     println!("{link}")
-    // }
+    println!("We have gathered {:?} SOTU links.", total_links);
 
     // Create an instance of the NGramModel
     let mut ngmodel = NGramModel::new(4);
 
+    // Build selector for SOTU content
     let selector = Selector::parse(r#"div[class="field-docs-content"]"#).unwrap();
 
-
     for (pos, sotu_link) in sotu_links.iter().enumerate() {
+        println!("{:?}/{total_links} -- Downloading: {sotu_link}", pos+1);
         let sotu_text = get_text(&sotu_link);
-        println!("{:?}/{total_links} -- Doing: {sotu_link}", pos+1);
         match sotu_text {
             Ok(content) => {
                 let fragment = Html::parse_fragment(&content);
@@ -65,23 +63,17 @@ fn main() {
                 let text_lines = ul.child_elements().flat_map(|el| el.text()).collect::<Vec<_>>();
                 
                 // Got the content and loading it into the model
-
-                // TODO - Split on fullstop
-
                 for line in text_lines {
-                    if !line.is_empty() {
-                        ngmodel.update_ngram_model(line.to_string());
+                    for part_line in line.split(".") {
+                        if !part_line.is_empty() {
+                            ngmodel.update_ngram_model(part_line.to_string());
+                        }
                     }
                 }
             }
             Err(e) => panic!("Failed to get text: {e:?}")
         }
     }
-    
-    
-
-
-    
 
     // // Learn the model with these files
     // for file_path in file_paths {
@@ -127,5 +119,3 @@ fn get_text(url: &str) -> Result<String, Box<dyn std::error::Error>> {
     // wrapped response in Result
     Ok(response)
 }
-
-
