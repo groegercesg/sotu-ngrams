@@ -1,4 +1,4 @@
-# Grams
+# State of the Union N-grams
 
 The following repo implements a N-gram language model in Rust and uses it to generate synthetic exerpts from hypothetical Presidential "State of the Union" address. Below are some samples:
 
