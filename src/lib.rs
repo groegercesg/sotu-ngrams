@@ -491,7 +491,8 @@ impl SOTUScraper {
                     for line in text_lines {
                         for part_line in line.split(".") {
                             if !part_line.is_empty() {
-                                sotu_lines.push(SOTUScraper::remove_whitespace(part_line));
+                                let cleaned_line = part_line.trim().to_string();
+                                sotu_lines.push(cleaned_line);
                             }
                         }
                     }
@@ -501,10 +502,6 @@ impl SOTUScraper {
         }
         
         return SOTUScraper {text_lines: sotu_lines}
-    }
-
-    fn remove_whitespace(s: &str) -> String {
-        s.chars().filter(|c| !c.is_whitespace()).collect()
     }
 
     fn get_text_from_url(url: &str) -> Result<String, Box<dyn std::error::Error>> {
