@@ -457,6 +457,7 @@ impl SOTUScraper {
                     .find(Name("table"))
                     .for_each(|x| table_contents.push(x.html()));
 
+                // From every table in the document, gather the links to subpages
                 for individual_table in table_contents {
                     Document::from(individual_table.as_str())
                         .find(Name("a"))
@@ -476,6 +477,7 @@ impl SOTUScraper {
         // Build selector for SOTU content
         let selector = Selector::parse(r#"div[class="field-docs-content"]"#).unwrap();
 
+        // For every subpage, get the HTML and parse it correctly
         for (pos, sotu_link) in sotu_links.iter().enumerate() {
             println!("{:?}/{total_links} -- Downloading: '{sotu_link}'", pos+1);
             let sotu_text = SOTUScraper::get_text_from_url(&sotu_link);
@@ -489,7 +491,7 @@ impl SOTUScraper {
                     for line in text_lines {
                         for part_line in line.split(".") {
                             if !part_line.is_empty() {
-                                sotu_lines.push(part_line.to_string());
+                                sotu_lines.push(SOTUScraper::remove_whitespace(part_line));
                             }
                         }
                     }
@@ -499,6 +501,10 @@ impl SOTUScraper {
         }
         
         return SOTUScraper {text_lines: sotu_lines}
+    }
+
+    fn remove_whitespace(s: &str) -> String {
+        s.chars().filter(|c| !c.is_whitespace()).collect()
     }
 
     fn get_text_from_url(url: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -521,5 +527,4 @@ impl SOTUScraper {
     ) -> std::slice::Iter<'_, String> {
         return self.text_lines.iter();
     }
-
 }
